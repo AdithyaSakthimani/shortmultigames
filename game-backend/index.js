@@ -14,7 +14,15 @@ const io = new Server(server, {
 });
 
 let rooms = {};
-
+const initializeOthelloBoard = () => {
+  const board = Array(8).fill(null).map(() => Array(8).fill(null));
+  // Set initial pieces
+  board[3][3] = 'white';
+  board[3][4] = 'black';
+  board[4][3] = 'black';
+  board[4][4] = 'white';
+  return board;
+};
 // Initialize game state for a room
 const initializeGameState = (gameType) => {
   const baseState = {
@@ -45,10 +53,8 @@ const initializeGameState = (gameType) => {
   } else if (gameType === 'othello') {
     return {
       ...baseState,
-      board: Array(64).fill(null),
-      isBlackNext: true,
-      blackCount: 2,
-      whiteCount: 2
+      board: initializeOthelloBoard(),
+      isBlackNext: true
     };
   }
 };
@@ -140,29 +146,24 @@ const calculateRPSWinner = (player1Choice, player2Choice) => {
   return winningConditions[player1Choice] === player2Choice ? 'player1' : 'player2';
 };
 
-// Check for winner in Othello
+
+
 const calculateOthelloWinner = (board) => {
-  const blackCount = board.filter(cell => cell === 'black').length;
-  const whiteCount = board.filter(cell => cell === 'white').length;
-
-  if (blackCount > whiteCount) return 'black';
-  if (whiteCount > blackCount) return 'white';
-  return 'Draw';
+  let blackCount = 0;
+  let whiteCount = 0;
+  
+  for (let row = 0; row < 8; row++) {
+    for (let col = 0; col < 8; col++) {
+      if (board[row][col] === 'black') blackCount++;
+      else if (board[row][col] === 'white') whiteCount++;
+    }
+  }
+  
+  if (blackCount === whiteCount) return 'Draw';
+  return blackCount > whiteCount ? 'black' : 'white';
 };
 
-// Validate Othello move
-const isValidOthelloMove = (board, index, isBlackNext) => {
-  // Implement Othello move validation logic
-  // (Check for valid flips in all 8 directions)
-  return true; // Placeholder
-};
 
-// Make Othello move
-const makeOthelloMove = (board, index, isBlackNext) => {
-  // Implement Othello move logic
-  // (Flip opponent's pieces in all valid directions)
-  return board; // Placeholder
-};
 
 io.on('connection', (socket) => {
   console.log(`New client connected: ${socket.id}`);
@@ -330,27 +331,25 @@ io.on('connection', (socket) => {
         room.gameInProgress = false;
       }
     }
-
-    // Handle Othello moves
-    else if (move.type === 'othello') {
-      if (isValidOthelloMove(room.board, move.position, room.isBlackNext)) {
-        room.board = makeOthelloMove(room.board, move.position, room.isBlackNext);
-        room.isBlackNext = !room.isBlackNext;
-
-        const winner = calculateOthelloWinner(room.board);
-        const isDraw = !room.board.includes(null);
-
-        io.to(roomId).emit('gameUpdate', {
-          board: room.board,
-          isBlackNext: room.isBlackNext,
-          winner: winner === 'Draw' ? 'Draw' : room[winner === 'black' ? 'player1' : 'player2']
-        });
-
-        if (winner || isDraw) {
-          room.gameInProgress = false;
-        }
-      }
-    }
+  else if (move.type === 'othello') {
+  // Simply update and relay the board state
+  room.board = move.board;
+  room.isBlackNext = move.isBlackNext;
+  if (move.winner) {
+    io.to(roomId).emit('gameUpdate', {
+      board: room.board,
+      isBlackNext: room.isBlackNext,
+      winner: move.winner
+    });
+    room.gameInProgress = false;
+  } else {
+    io.to(roomId).emit('gameUpdate', {
+      board: room.board,
+      isBlackNext: room.isBlackNext,
+      winner: null
+    });
+  }
+}
   });
 
   socket.on('leaveRoom', (roomCode, name) => {

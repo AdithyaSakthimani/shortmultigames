@@ -48,7 +48,7 @@ const HomeArea = () => {
     {
       icon: <Ban className='feature-icon' />,
       title: "No Sign Up",
-      description: "Compete for the top spot"
+      description: "play games with  each other without needing to ever sign up "
     },
     {
       icon: <MessageCircle className="feature-icon" />,

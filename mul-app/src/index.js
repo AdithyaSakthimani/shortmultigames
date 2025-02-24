@@ -11,6 +11,7 @@ import Connect4 from './components/Connect4';
 import GameRoom from './components/GameRoom';
 import RockPaperScissors from './components/RockPaperScissors';
 import HomeArea from './HomeArea';
+import Othello from './components/Othello';
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
 const NavFunc = () => {
@@ -21,6 +22,7 @@ const NavFunc = () => {
         <Routes>
           <Route path="/" element={<HomeArea />} />
           <Route path="/rooms" element={<HomePage />} />
+          <Route path="/othello" element={<Othello/>} />
           <Route path="/connect4" element={<Connect4/>} />
           <Route path="/tictactoe" element={<TicTacToe/>} />
           <Route path="/gameroom" element={<GameRoom/>} />

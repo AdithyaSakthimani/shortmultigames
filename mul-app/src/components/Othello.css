@@ -1,0 +1,125 @@
+
+.othello-container {
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+    justify-content: center;
+    width: 100%;
+    height: 90vh;
+    align-items: center ;
+  }
+  
+
+  
+  .othello-game-status {
+    font-size: 1.25rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+  
+  .othello-board {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 1px;
+    background-color: rgb(22, 101, 52);
+    padding: 6px;
+    border-radius: 8px;
+    width: 80%;
+    aspect-ratio: 1; 
+    max-width: 700px;
+    max-height: 500px;
+  }
+  @media all and (min-width: 700px) {
+    .othello-board{
+        padding-top: 15px;
+        padding-bottom: 15px;
+        padding-left: 20px;
+    }
+  }
+  .board-cell {
+    aspect-ratio: 1;
+    width: 100%;
+    height: auto;
+    background-color: rgb(22, 163, 74);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 50%;
+    position: relative;
+    max-width: 60px;
+  }
+  
+  .board-cell::before {
+    content: '';
+    position: absolute;
+    width: 80%;
+    height: 80%;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+  }
+  
+  .piece-black::before {
+    background-color: black;
+  }
+  
+  .piece-white::before {
+    background-color: white;
+  }
+  
+  .valid-move::after {
+    content: '';
+    position: absolute;
+    width: 30%;
+    height: 30%;
+    border-radius: 50%;
+    background-color: rgba(34, 197, 94, 0.5);
+  }
+  
+  .game-analytics {
+    width: 100%;
+    max-width: 250px;
+  }
+  
+  .analytics-panel {
+    background-color: white;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+  
+  .score-container {
+    margin-bottom: 1rem;
+  }
+  
+  .player-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+  }
+  
+  .player-label {
+    font-weight: bold;
+  }
+  
+  .reset-button {
+    width: 100%;
+    background-color: rgb(59, 130, 246);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .reset-button:hover {
+    background-color: rgb(37, 99, 235);
+  }
+  
+  .error-message {
+    color: rgb(239, 68, 68);
+    margin-top: 0.5rem;
+  }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NoteContext from './components/NoteContext';
-import './HomePage.css'; // Import the CSS file
+import './HomePage.css';
 
 function HomePage() {
   const navigate = useNavigate();
