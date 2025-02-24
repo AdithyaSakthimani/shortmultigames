@@ -50,6 +50,7 @@ function HomePage() {
     <div className="hompage-container">
       <div className="box">
         <h2 className="title">Create Room</h2>
+        <h3 className="sub-title">Generate a custom room to play games with your friends</h3>
         <button className="button create-button" onClick={createRoom}>
           Create
         </button>
@@ -58,6 +59,7 @@ function HomePage() {
 
       <div className="box">
         <h2 className="title">Join Room</h2>
+        <h3 className="sub-title">Join a custom room to play games with your friends</h3>
         <div className="input-group">
           <label>Player Name</label>
           <input

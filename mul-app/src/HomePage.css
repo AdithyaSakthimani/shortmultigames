@@ -35,7 +35,8 @@
   }
   
   .input-field {
-    width: 100%;
+    width: 95%;
+
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 6px;
@@ -55,6 +56,8 @@
   
   .create-button {
     background-color: #007bff;
+    width: 60%;
+    max-width: 300px;
   }
   
   .create-button:hover {
@@ -63,8 +66,12 @@
   
   .join-button {
     background-color: #28a745;
+    width: 60%;
+    max-width: 300px;
   }
-  
+  .sub-title{
+    font-size: 1rem;
+  }
   .join-button:hover {
     background-color: #218838;
   }

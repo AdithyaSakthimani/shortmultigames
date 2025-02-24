@@ -10,6 +10,7 @@ import TicTacToe from './components/TicTacToe';
 import Connect4 from './components/Connect4';
 import GameRoom from './components/GameRoom';
 import RockPaperScissors from './components/RockPaperScissors';
+import HomeArea from './HomeArea';
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
 const NavFunc = () => {
@@ -18,7 +19,8 @@ const NavFunc = () => {
      {/*<Navbar />*/}
       <div>
         <Routes>
-          <Route path="/" element={<HomePage />} />
+          <Route path="/" element={<HomeArea />} />
+          <Route path="/rooms" element={<HomePage />} />
           <Route path="/connect4" element={<Connect4/>} />
           <Route path="/tictactoe" element={<TicTacToe/>} />
           <Route path="/gameroom" element={<GameRoom/>} />
