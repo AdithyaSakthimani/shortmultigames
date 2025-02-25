@@ -136,7 +136,7 @@ const TicTacToe = () => {
         </div>
     
         {/* Right Side - Analytics */}
-        <div className="game-analytics">
+        <div className="tictactoe-game-analytics">
           <div className="score-area">
             <div className="score-item">
               <span className="player-label">

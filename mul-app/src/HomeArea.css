@@ -1,4 +1,10 @@
 /* HomePage.css */
+*{
+  font-family: "Geist", serif;;
+}
+body{
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+}
 .homepage {
     min-height: 100vh;
     background: linear-gradient(135deg, #1a1a2e, #16213e);
@@ -7,7 +13,7 @@
   }
   
   .container {
-    max-width: 1200px;
+
     margin: 0 auto;
     padding: 4rem 2rem;
   }
@@ -66,7 +72,7 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 2rem;
-    margin-bottom: 4rem;
+    margin: 4rem;
   }
   
   .step-card {
@@ -104,6 +110,7 @@
     border-radius: 1rem;
     padding: 2rem;
     text-align: center;
+    margin: 4rem;
   }
   
   .features-title {
@@ -198,3 +205,149 @@
     color: #a9a9a9;
   }
   
+/* Hero Section */
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  height:  90vh; /* Full viewport height */
+  width: 100%;
+  position: relative;
+  background-image: url('./components/images/6071908_3101702.jpg'); /* Path to your image */
+  background-size: cover; /* Ensure the image covers the entire hero section */
+  background-position: center; /* Center the image */
+  background-repeat: no-repeat; /* Prevent the image from repeating */
+  background-color: rgba(0, 0, 0, 0.5); /* Optional: Add a dark overlay for better text contrast */
+  background-blend-mode: overlay; /* Blend the background color with the image */
+  color: white; /* Ensure text is readable */
+}
+
+.hero-content {
+  z-index: 2;
+  position: relative;
+}
+
+.title {
+  font-size: 3.5rem;
+  margin-bottom: 1rem;
+  background: white;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.subtitle {
+  font-size: 1.25rem;
+  color: #e0e0e0; /* Light gray for better contrast */
+  margin-bottom: 2rem;
+}
+
+.cta-button {
+  background: #8b5cf6;
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  font-size: 1.2rem;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.cta-button:hover {
+  background: #7c3aed;
+  transform: scale(1.05);
+}
+
+/* Scroll Down Indicator */
+.scroll-down {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  animation: bounce 2s infinite;
+}
+
+.scroll-down span {
+  display: block;
+  font-size: 1.5rem;
+  color: white;
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  60% {
+    transform: translateY(-5px);
+  }
+}
+.crossed-swords {
+  position: relative;
+  height: 80px;
+  width: fit-content;
+  margin: 0 auto 1.5rem auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.sword {
+  width: 120px;
+  height: 120px;
+  color: #e0e0e0;
+  position: absolute;
+  filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.5));
+  transition: transform 0.3s ease, color 0.3s ease;
+  margin-right: 20px;
+}
+
+.sword-left {
+  transform: rotate(+90deg) translateX(-10px) translateY(13px);
+
+}
+
+.sword-right {
+  transform: rotate(+2deg) translateX(13px) translateY(-8px);
+}
+
+.crossed-swords:hover .sword-left {
+  animation: smoothLeft 2s forwards;
+  color: #8b5cf6;
+}
+
+.crossed-swords:hover .sword-right {
+  animation: smoothRight 2s forwards;
+  color: #ec4899;
+}
+@keyframes smoothLeft {
+  0% {
+    transform: translateX(0);
+  }
+  100%{
+    transform: rotate(+180deg) translateX(5px) translateY(10px);
+  }
+}
+@keyframes smoothRight {
+  0% {
+    transform: translateX(0);
+  }
+  100%{
+    transform: rotate(-90deg) translateX(10px) translateY(10px);
+  }
+}
+@media all and (max-width:780px) {
+  .hero{
+    height: 87vh;
+    padding: 20px;
+  }
+}
+.features{
+  padding: 30px !important;
+  margin-bottom: 50px;
+}

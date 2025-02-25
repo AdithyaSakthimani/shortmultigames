@@ -222,7 +222,6 @@ const Connect4 = () => {
 
   return (
     <div className="connect-game-container">
-      {/* Left Side - Game Board */}
       <div>
         <div className="game-info">
             {winner.mark
@@ -249,16 +248,16 @@ const Connect4 = () => {
       </div>
   
       {/* Right Side - Analytics */}
-      <div className="game-analytics">
-        <div className="score-board">
-          <div className="score-item">
+      <div className="connect-game-analytics">
+        <div className="connect-score-board">
+          <div className="connect-score-item">
             <span className="player-label">
               <strong>Player Red</strong>
               {player1 || 'Waiting...'}
             </span>
             <span className="score-value">{score.player1}</span>
           </div>
-          <div className="score-item">
+          <div className="connect-score-item">
             <span className="player-label">
               <strong>Player Yellow</strong>
               {player2 || 'Waiting...'}

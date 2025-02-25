@@ -138,13 +138,14 @@ const GameRoom = () => {
 
       {playersPresent && (
         <div className="game-selection">
-          {["connect4", "tictactoe" , "rockpaperscissors","othello"].map((game) => (
+          {["connect4", "tictactoe" , "rockpaperscissors","othello","battleship"].map((game) => (
             <div key={game} className="game-item">
               <h3 className="game-title">
                 {game === "connect4" ? "Connect 4" : ""}
                 {game === "tictactoe" ? "Tic Tac Toe" : ""}
                 {game === "rockpaperscissors" ? "Rock Paper Scissors" : ""}
                 {game === "othello" ? "Othello" : ""}
+                {game === "battleship" ? "BattleShip" : ""}
               </h3>
               <button
                 className="button start-button"
@@ -158,7 +159,7 @@ const GameRoom = () => {
       )}
       <div className="status">
         {!playersPresent ? (
-          <div className="waiting-text">Waiting for players...</div>
+          <div className="waiting-text">Waiting for another player...</div>
         ) : (
           <div className="connected-text">Players connected!</div>
         )}

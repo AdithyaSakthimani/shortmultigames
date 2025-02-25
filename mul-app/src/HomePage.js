@@ -49,16 +49,16 @@ function HomePage() {
   return (
     <div className="hompage-container">
       <div className="box">
-        <h2 className="title">Create Room</h2>
+        <h2 className="rooms-title">Create Room</h2>
         <h3 className="sub-title">Generate a custom room to play games with your friends</h3>
-        <button className="button create-button" onClick={createRoom}>
+        <button className="rooms-button" onClick={createRoom}>
           Create
         </button>
-        {genCode && <p className="room-code">Room code: <span>{genCode}</span></p>}
+        {genCode && <p className="gen-room-code">Room code: <span>{genCode}</span></p>}
       </div>
 
       <div className="box">
-        <h2 className="title">Join Room</h2>
+        <h2 className="rooms-title">Join Room</h2>
         <h3 className="sub-title">Join a custom room to play games with your friends</h3>
         <div className="input-group">
           <label>Player Name</label>

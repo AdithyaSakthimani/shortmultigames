@@ -5,10 +5,10 @@ import {
   Play, 
   Gamepad2, 
   Sword,
-  Zap, // For Real-time Battles
-  Home, // For Custom Rooms
-  Trophy, // For Global Rankings
-  MessageCircle, // For Chat System
+  Zap,
+  Home,
+  Trophy,
+  MessageCircle,
   Ban
 } from 'lucide-react';
 import './HomeArea.css';
@@ -48,22 +48,23 @@ const HomeArea = () => {
     {
       icon: <Ban className='feature-icon' />,
       title: "No Sign Up",
-      description: "play games with  each other without needing to ever sign up "
+      description: "play games with each other without needing to ever sign up "
     },
     {
-      icon: <MessageCircle className="feature-icon" />,
-      title: "Chat System",
-      description: "Communicate with other players"
+      icon: <Gamepad2 className="feature-icon" />,
+      title: "Cross-Device Play",
+      description: "Play from any device with a browser - desktop, tablet, or mobile"
     }
   ];
 
   return (
     <div className="homepage">
-      <div className="container">
-        {/* Hero Section */}
-        <div className="hero">
-          <div className="logo">
-            <Gamepad2 className="game-icon" />
+      <div className="hero">
+        <div className="hero-content">
+          {/* Crossed Swords Icon */}
+          <div className="crossed-swords">
+            <Sword className="sword sword-left" />
+            <Sword className="sword sword-right" />
           </div>
           <h1 className="title">Multiplayer Battle Arena</h1>
           <p className="subtitle">
@@ -76,34 +77,38 @@ const HomeArea = () => {
             Start Playing
           </button>
         </div>
+        {/* Scroll Down Indicator */}
+        <div className="scroll-down">
+          <span>↓</span>
+        </div>
+      </div>
 
-        {/* Steps Section */}
-        <div className="steps-grid">
-          {steps.map((step, index) => (
-            <div key={index} className="step-card">
-              <div className="icon-container">
-                {step.icon}
+      {/* Steps Section */}
+      <div className="steps-grid">
+        {steps.map((step, index) => (
+          <div key={index} className="step-card">
+            <div className="icon-container">
+              {step.icon}
+            </div>
+            <h3 className="step-title">{step.title}</h3>
+            <p className="step-description">{step.description}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Features Section */}
+      <div className="features">
+        <h2 className="features-title">Game Features</h2>
+        <div className="features-grid">
+          {features.map((feature, index) => (
+            <div key={index} className="feature">
+              <div className="feature-icon-container">
+                {feature.icon}
               </div>
-              <h3 className="step-title">{step.title}</h3>
-              <p className="step-description">{step.description}</p>
+              <h3>{feature.title}</h3>
+              <p>{feature.description}</p>
             </div>
           ))}
-        </div>
-
-        {/* Features Section */}
-        <div className="features">
-          <h2 className="features-title">Game Features</h2>
-          <div className="features-grid">
-            {features.map((feature, index) => (
-              <div key={index} className="feature">
-                <div className="feature-icon-container">
-                  {feature.icon}
-                </div>
-                <h3>{feature.title}</h3>
-                <p>{feature.description}</p>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
     </div>

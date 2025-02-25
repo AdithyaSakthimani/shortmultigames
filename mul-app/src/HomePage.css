@@ -1,4 +1,3 @@
-
 .homepage-container {
     max-width: 400px;
     margin: 40px auto;
@@ -8,6 +7,7 @@
   /* Box styling */
   .box {
     padding: 20px;
+    margin: 20px;
     border: 1px solid #ccc;
     border-radius: 8px;
     margin-bottom: 20px;
@@ -16,10 +16,11 @@
   }
   
   /* Title styling */
-  .title {
-    font-size: 24px;
+  .rooms-title {
+    font-size: 3rem;
     font-weight: bold;
     margin-bottom: 16px;
+    color: #1a426c;
   }
   
   /* Input fields */
@@ -44,7 +45,7 @@
   }
   
   /* Buttons */
-  .button {
+  .rooms-button {
     width: 100%;
     padding: 12px;
     border: none;
@@ -54,10 +55,11 @@
     color: white;
   }
   
-  .create-button {
+  .rooms-button {
     background-color: #007bff;
     width: 60%;
     max-width: 300px;
+    margin-top: 20px;
   }
   
   .create-button:hover {
@@ -68,16 +70,18 @@
     background-color: #28a745;
     width: 60%;
     max-width: 300px;
+    border: none;
   }
   .sub-title{
     font-size: 1rem;
+    margin-bottom: 10px;
   }
   .join-button:hover {
     background-color: #218838;
   }
   
   /* Room code text */
-  .room-code {
+  .gen-room-code {
     margin-top: 12px;
     font-size: 16px;
     font-family: monospace;

@@ -6,10 +6,14 @@ const RockPaperScissors = () => {
   const [result, setResult] = useState(null);
   const [opponent, setOpponent] = useState(null);
   const [gameState, setGameState] = useState('choosing');
-  
+  const contextValue = useContext(NoteContext);
+  const socket = contextValue?.socket;
+  const code = contextValue?.code;
+  const playerName = contextValue?.playerName;
+  const playerStatus = contextValue?.playerStatus || {};
   const [scores, setScores] = useState(() => {
     try {
-      const savedScores = localStorage.getItem('rpsScores');
+      const savedScores = localStorage.getItem(`rpsScores_${code}`);
       return savedScores ? JSON.parse(savedScores) : {
         player1: {
           name: '',
@@ -33,11 +37,6 @@ const RockPaperScissors = () => {
     }
   });
 
-  const contextValue = useContext(NoteContext);
-  const socket = contextValue?.socket;
-  const code = contextValue?.code;
-  const playerName = contextValue?.playerName;
-  const playerStatus = contextValue?.playerStatus || {};
 
   useEffect(() => {
     if (playerStatus.player1 || playerStatus.player2) {
@@ -52,7 +51,7 @@ const RockPaperScissors = () => {
             name: playerStatus.player2 || ''
           }
         };
-        localStorage.setItem('rpsScores', JSON.stringify(newScores));
+        localStorage.setItem(`rpsScores_${code}`, JSON.stringify(newScores));
         return newScores;
       });
     }

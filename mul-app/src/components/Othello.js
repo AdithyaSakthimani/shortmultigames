@@ -205,25 +205,27 @@ const Othello = () => {
 
   return (
     <div className="othello-container">
-      <div className="othello-game-status">
-        {error && <div className="error">{error}</div>}
-        {winner.player
-          ? winner.player === 'Draw'
-            ? "It's a Draw!"
-            : `${winner.name} Wins!`
-          : `${currentPlayerName}'s Turn (${isBlackNext ? 'Black' : 'White'})${mustSkip ? ' - No valid moves, place piece to skip turn' : ''}`}
-      </div>
-      <div className="othello-board">
-        {board.map((row, rowIndex) =>
-          row.map((cell, colIndex) => (
-            <div
-              key={`${rowIndex}-${colIndex}`}
-              onClick={() => handleCellClick(rowIndex, colIndex)}
-              className={`board-cell ${cell === 'black' ? 'piece-black' : cell === 'white' ? 'piece-white' : ''}
-                ${validMoves.some(([r, c]) => r === rowIndex && c === colIndex) ? 'valid-move' : ''}`}
-            />
-          ))
-        )}
+      <div className='othello-area'>
+        <div className="othello-game-status">
+          {error && <div className="error">{error}</div>}
+          {winner.player
+            ? winner.player === 'Draw'
+              ? "It's a Draw!"
+              : `${winner.name} Wins!`
+            : `${currentPlayerName}'s Turn (${isBlackNext ? 'Black' : 'White'})${mustSkip ? ' - No valid moves, place piece to skip turn' : ''}`}
+        </div>
+        <div className="othello-board">
+          {board.map((row, rowIndex) =>
+            row.map((cell, colIndex) => (
+              <div
+                key={`${rowIndex}-${colIndex}`}
+                onClick={() => handleCellClick(rowIndex, colIndex)}
+                className={`board-cell ${cell === 'black' ? 'piece-black' : cell === 'white' ? 'piece-white' : ''}
+                  ${validMoves.some(([r, c]) => r === rowIndex && c === colIndex) ? 'valid-move' : ''}`}
+              />
+            ))
+          )}
+        </div>
       </div>
     </div>
   );

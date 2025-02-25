@@ -12,12 +12,15 @@ import GameRoom from './components/GameRoom';
 import RockPaperScissors from './components/RockPaperScissors';
 import HomeArea from './HomeArea';
 import Othello from './components/Othello';
+import Battleship from './components/BattleShip';
+import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
 const NavFunc = () => {
   return (
     <>
-     {/*<Navbar />*/}
+     <Navbar/>
       <div>
         <Routes>
           <Route path="/" element={<HomeArea />} />
@@ -27,9 +30,10 @@ const NavFunc = () => {
           <Route path="/tictactoe" element={<TicTacToe/>} />
           <Route path="/gameroom" element={<GameRoom/>} />
           <Route path="/rockpaperscissors" element={<RockPaperScissors/>} />
+          <Route path="/battleship" element={<Battleship/>} />
         </Routes>
       </div>
-      {/*<Navbar />*/}
+      <Footer/>
     </>
   );
 };

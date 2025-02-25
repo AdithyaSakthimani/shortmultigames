@@ -2,7 +2,11 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
-
+const calculateConnect4Winner = require('./Connect4Func.js');
+const calculateTicTacToeWinner = require('./TicTacToeFunc.js');
+const calculateRPSWinner = require('./RPSFunc.js');
+const initializeGameState  = require('./InitGames.js');
+const{handleBattleshipMove,checkAllShipsSunk} = require('./BattleShip.js')
 const app = express();
 app.use(cors());
 
@@ -14,157 +18,6 @@ const io = new Server(server, {
 });
 
 let rooms = {};
-const initializeOthelloBoard = () => {
-  const board = Array(8).fill(null).map(() => Array(8).fill(null));
-  // Set initial pieces
-  board[3][3] = 'white';
-  board[3][4] = 'black';
-  board[4][3] = 'black';
-  board[4][4] = 'white';
-  return board;
-};
-// Initialize game state for a room
-const initializeGameState = (gameType) => {
-  const baseState = {
-    player1: null,
-    player2: null,
-    gameInProgress: false
-  };
-
-  if (gameType === 'tictactoe') {
-    return {
-      ...baseState,
-      board: Array(9).fill(null),
-      isXNext: true
-    };
-  } else if (gameType === 'connect4') {
-    return {
-      ...baseState,
-      board: Array(42).fill(null),
-      isRedNext: true
-    };
-  } else if (gameType === 'rps') {
-    return {
-      ...baseState,
-      player1Choice: null,
-      player2Choice: null,
-      result: null
-    };
-  } else if (gameType === 'othello') {
-    return {
-      ...baseState,
-      board: initializeOthelloBoard(),
-      isBlackNext: true
-    };
-  }
-};
-
-// Check for winner in Connect4
-const calculateConnect4Winner = (squares) => {
-  // Check horizontal
-  for (let row = 0; row < 6; row++) {
-    for (let col = 0; col < 4; col++) {
-      const index = row * 7 + col;
-      if (squares[index] &&
-          squares[index] === squares[index + 1] &&
-          squares[index] === squares[index + 2] &&
-          squares[index] === squares[index + 3]) {
-        return squares[index];
-      }
-    }
-  }
-
-  // Check vertical
-  for (let row = 0; row < 3; row++) {
-    for (let col = 0; col < 7; col++) {
-      const index = row * 7 + col;
-      if (squares[index] &&
-          squares[index] === squares[index + 7] &&
-          squares[index] === squares[index + 14] &&
-          squares[index] === squares[index + 21]) {
-        return squares[index];
-      }
-    }
-  }
-
-  // Check diagonal (positive slope)
-  for (let row = 0; row < 3; row++) {
-    for (let col = 0; col < 4; col++) {
-      const index = row * 7 + col;
-      if (squares[index] &&
-          squares[index] === squares[index + 8] &&
-          squares[index] === squares[index + 16] &&
-          squares[index] === squares[index + 24]) {
-        return squares[index];
-      }
-    }
-  }
-
-  // Check diagonal (negative slope)
-  for (let row = 3; row < 6; row++) {
-    for (let col = 0; col < 4; col++) {
-      const index = row * 7 + col;
-      if (squares[index] &&
-          squares[index] === squares[index - 6] &&
-          squares[index] === squares[index - 12] &&
-          squares[index] === squares[index - 18]) {
-        return squares[index];
-      }
-    }
-  }
-
-  return null;
-};
-
-// Check for winner in TicTacToe
-const calculateTicTacToeWinner = (squares) => {
-  const lines = [
-    [0, 1, 2], [3, 4, 5], [6, 7, 8],
-    [0, 3, 6], [1, 4, 7], [2, 5, 8],
-    [0, 4, 8], [2, 4, 6]
-  ];
-
-  for (let line of lines) {
-    const [a, b, c] = line;
-    if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-      return squares[a];
-    }
-  }
-  return null;
-};
-
-// Check for winner in Rock-Paper-Scissors
-const calculateRPSWinner = (player1Choice, player2Choice) => {
-  if (player1Choice === player2Choice) return 'Draw';
-
-  const winningConditions = {
-    rock: 'scissors',
-    paper: 'rock',
-    scissors: 'paper'
-  };
-
-  return winningConditions[player1Choice] === player2Choice ? 'player1' : 'player2';
-};
-
-
-
-const calculateOthelloWinner = (board) => {
-  let blackCount = 0;
-  let whiteCount = 0;
-  
-  for (let row = 0; row < 8; row++) {
-    for (let col = 0; col < 8; col++) {
-      if (board[row][col] === 'black') blackCount++;
-      else if (board[row][col] === 'white') whiteCount++;
-    }
-  }
-  
-  if (blackCount === whiteCount) return 'Draw';
-  return blackCount > whiteCount ? 'black' : 'white';
-};
-
-
-
 io.on('connection', (socket) => {
   console.log(`New client connected: ${socket.id}`);
 
@@ -174,7 +27,6 @@ io.on('connection', (socket) => {
     socket.emit('getCode', roomCode);
     console.log(`Room created: ${roomCode} for ${gameType}`);
   });
-
   socket.on('joinRoom', (name, roomCode) => {
     console.log(`Attempting to join room ${roomCode} as ${name}`);
     console.log('Current room state:', rooms[roomCode]);
@@ -332,7 +184,6 @@ io.on('connection', (socket) => {
       }
     }
   else if (move.type === 'othello') {
-  // Simply update and relay the board state
   room.board = move.board;
   room.isBlackNext = move.isBlackNext;
   if (move.winner) {
@@ -349,7 +200,11 @@ io.on('connection', (socket) => {
       winner: null
     });
   }
-}
+} 
+  else if (move.type === 'battleship'){
+    handleBattleshipMove(io,room, move, move.player,roomId,socket);
+    return;
+  }
   });
 
   socket.on('leaveRoom', (roomCode, name) => {
