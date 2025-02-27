@@ -212,7 +212,7 @@ body{
   align-items: center;
   justify-content: center;
   text-align: center;
-  height:  90vh; /* Full viewport height */
+  height:  92vh; /* Full viewport height */
   width: 100%;
   position: relative;
   background-image: url('./components/images/6071908_3101702.jpg'); /* Path to your image */
@@ -341,12 +341,7 @@ body{
     transform: rotate(-90deg) translateX(10px) translateY(10px);
   }
 }
-@media all and (max-width:780px) {
-  .hero{
-    height: 87vh;
-    padding: 20px;
-  }
-}
+
 .features{
   padding: 30px !important;
   margin-bottom: 50px;

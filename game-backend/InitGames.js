@@ -1,12 +1,4 @@
-const initializeOthelloBoard = () => {
-    const board = Array(8).fill(null).map(() => Array(8).fill(null));
-    // Set initial pieces
-    board[3][3] = 'white';
-    board[3][4] = 'black';
-    board[4][3] = 'black';
-    board[4][4] = 'white';
-    return board;
-  };
+
   
   const initializeGameState = (gameType) => {
     const baseState = {
@@ -35,11 +27,21 @@ const initializeOthelloBoard = () => {
         result: null
       };
     } else if (gameType === 'othello') {
-      return {
-        ...baseState,
-        board: initializeOthelloBoard(),
-        isBlackNext: true
-      };
+
+        const newBoard = Array(8).fill(null).map(() => Array(8).fill(null));
+        newBoard[3][3] = 'white';
+        newBoard[3][4] = 'black';
+        newBoard[4][3] = 'black';
+        newBoard[4][4] = 'white';
+        
+        return {
+          board: newBoard,
+          isBlackNext: true,
+          gameInProgress: false,
+          player1: null,
+          player2: null,
+         
+        };
     } 
     if (gameType === 'battleship') {
         return {

@@ -109,7 +109,7 @@ const GameRoom = () => {
     localStorage.removeItem('gameSession');
     setCode(null);
     setPlayerName("");
-    navigate("/");
+    navigate("/rooms");
   };
 
   if (!code || !playerName) {

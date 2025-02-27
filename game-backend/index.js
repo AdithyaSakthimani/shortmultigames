@@ -18,6 +18,7 @@ const io = new Server(server, {
 });
 
 let rooms = {};
+let publicRooms =[] ; 
 io.on('connection', (socket) => {
   console.log(`New client connected: ${socket.id}`);
 
@@ -27,24 +28,48 @@ io.on('connection', (socket) => {
     socket.emit('getCode', roomCode);
     console.log(`Room created: ${roomCode} for ${gameType}`);
   });
+  socket.on('createPublicRoom', (roomName, gameType = 'tictactoe') => {
+    const roomId = Math.random().toString(36).substr(2, 5);
+    rooms[roomId] = initializeGameState(gameType);
+    
+    // Create public room with the structure your client expects
+    const newPublicRoom = {
+      roomName: roomName,
+      roomId: roomId,
+      players: [] // Initialize empty players array
+    };
+    
+    publicRooms.push(newPublicRoom);
+    
+    // Emit to the specific socket
+    socket.emit('getCode', roomId);
+    
+    // Broadcast to all clients that public rooms have been updated
+    io.emit('getPublicRooms', publicRooms);
+    
+    console.log(`Public Room created: ${roomId} for ${gameType} with name ${roomName}`);
+  });
+  socket.on('getPublicRooms', () => {
+    socket.emit('getPublicRooms', publicRooms);
+  });
   socket.on('joinRoom', (name, roomCode) => {
     console.log(`Attempting to join room ${roomCode} as ${name}`);
     console.log('Current room state:', rooms[roomCode]);
-
+  
     if (!rooms[roomCode]) {
       console.log('Room not found');
       socket.emit("roomJoined", { success: false, error: "Room not found" });
       return;
     }
-
+  
     let room = rooms[roomCode];
-
+  
     // Log current players
     console.log('Current players:', {
       player1: room.player1,
       player2: room.player2
     });
-
+  
     if (room.player1 === name || room.player2 === name) {
       console.log('Player already in room');
       // If it's a reconnection, we should allow it
@@ -56,9 +81,9 @@ io.on('connection', (socket) => {
       });
       return;
     }
-
+  
     let assigned = false;
-
+  
     if (!room.player1) {
       room.player1 = name;
       assigned = true;
@@ -68,23 +93,29 @@ io.on('connection', (socket) => {
       assigned = true;
       console.log(`Assigned ${name} as player2`);
     }
-
+  
     if (assigned) {
       socket.join(roomCode);
       socket.emit("roomJoined", { success: true, roomCode });
-
+  
+      // Update the players list in the public room if this is a public room
+      const publicRoomIndex = publicRooms.findIndex(r => r.roomId === roomCode);
+      if (publicRoomIndex !== -1) {
+        // Update the players array in the public room
+        const updatedPlayers = [
+          room.player1 ? room.player1 : null,
+          room.player2 ? room.player2 : null
+        ].filter(Boolean); // Filter out null values
+        
+        publicRooms[publicRoomIndex].players = updatedPlayers;
+        
+        // Broadcast updated public rooms
+        io.emit('getPublicRooms', publicRooms);
+      }
+  
       io.to(roomCode).emit('playerStatus', {
         player1: room.player1,
         player2: room.player2
-      });
-
-      io.to(roomCode).emit('gameUpdate', {
-        board: room.board,
-        isXNext: room.isXNext,
-        isRedNext: room.isRedNext,
-        isBlackNext: room.isBlackNext,
-        player1Choice: room.player1Choice,
-        player2Choice: room.player2Choice
       });
     } else {
       console.log('Room is full');
@@ -183,24 +214,52 @@ io.on('connection', (socket) => {
         room.gameInProgress = false;
       }
     }
+
   else if (move.type === 'othello') {
-  room.board = move.board;
-  room.isBlackNext = move.isBlackNext;
-  if (move.winner) {
-    io.to(roomId).emit('gameUpdate', {
+    if (move.action === 'reset') {
+      // Reset the board but keep the scores
+      const newState = initializeGameState('othello');
+      rooms[roomId] = {
+        ...newState,
+        player1: room.player1,
+        player2: room.player2,
+        gameInProgress: true
+      };
+      
+      // Preserve the scores during reset
+      if (move.score) {
+        rooms[roomId].score = move.score;
+      }
+      
+      io.to(roomId).emit('gameUpdate', {
+        board: rooms[roomId].board,
+        isBlackNext: rooms[roomId].isBlackNext,
+        score: rooms[roomId].score
+      });
+      return;
+    }
+  
+    room.board = move.board;
+    room.isBlackNext = move.isBlackNext;
+    
+    // Update scores if provided
+    if (move.score) {
+      room.score = move.score;
+    }
+    
+    const gameUpdate = {
       board: room.board,
       isBlackNext: room.isBlackNext,
-      winner: move.winner
-    });
-    room.gameInProgress = false;
-  } else {
-    io.to(roomId).emit('gameUpdate', {
-      board: room.board,
-      isBlackNext: room.isBlackNext,
-      winner: null
-    });
+      score: room.score,
+      winner: move.winner || null
+    };
+    
+    io.to(roomId).emit('gameUpdate', gameUpdate);
+    
+    if (move.winner) {
+      room.gameInProgress = false;
+    }
   }
-} 
   else if (move.type === 'battleship'){
     handleBattleshipMove(io,room, move, move.player,roomId,socket);
     return;
@@ -209,15 +268,15 @@ io.on('connection', (socket) => {
 
   socket.on('leaveRoom', (roomCode, name) => {
     if (!rooms[roomCode]) return;
-
+  
     let room = rooms[roomCode];
-
+  
     if (room.player1 === name) {
       room.player1 = null;
     } else if (room.player2 === name) {
       room.player2 = null;
     }
-
+  
     const gameType = room.board.length === 9 ? 'tictactoe' : 'connect4';
     const newState = initializeGameState(gameType);
     rooms[roomCode] = {
@@ -225,7 +284,27 @@ io.on('connection', (socket) => {
       player1: room.player1,
       player2: room.player2
     };
-
+  
+    // Update the public room players list if this is a public room
+    const publicRoomIndex = publicRooms.findIndex(r => r.roomId === roomCode);
+    if (publicRoomIndex !== -1) {
+      // Update the players array in the public room
+      const updatedPlayers = [
+        room.player1 ? room.player1 : null,
+        room.player2 ? room.player2 : null
+      ].filter(Boolean); // Filter out null values
+      
+      publicRooms[publicRoomIndex].players = updatedPlayers;
+      
+      // If no players left, you might want to remove the public room
+      if (updatedPlayers.length === 0) {
+        publicRooms.splice(publicRoomIndex, 1);
+      }
+      
+      // Broadcast updated public rooms
+      io.emit('getPublicRooms', publicRooms);
+    }
+  
     if (!room.player1 && !room.player2) {
       delete rooms[roomCode];
       console.log(`Room ${roomCode} deleted`);
@@ -234,14 +313,14 @@ io.on('connection', (socket) => {
         player1: room.player1,
         player2: room.player2
       });
-
+  
       io.to(roomCode).emit('gameUpdate', {
         board: room.board,
         isXNext: room.isXNext,
         isRedNext: room.isRedNext
       });
     }
-
+  
     socket.leave(roomCode);
   });
 });
