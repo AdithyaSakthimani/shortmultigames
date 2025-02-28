@@ -3,7 +3,7 @@
 
 .footer {
   position: relative;
-  background: linear-gradient(135deg, #ffffff, #f9fafc);
+  background: rgb(0, 0, 0);
   padding: 50px 24px 24px;
   overflow: hidden;
 }
@@ -162,19 +162,7 @@
 }
 
 /* Wave Effect */
-.footer-wave {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 60px;
-  overflow: hidden;
-}
 
-.footer-wave svg {
-  width: 100%;
-  height: 100%;
-}
 
 /* Copyright */
 .copyright {

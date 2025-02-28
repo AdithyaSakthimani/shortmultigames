@@ -18,6 +18,7 @@ import {
   Globe,
   Sparkles
 } from 'lucide-react';
+import { Analytics } from "@vercel/analytics/react"
 import {
   SquareStack, // Othello
   Circle, // Connect 4
@@ -203,6 +204,7 @@ const HomeArea = () => {
           Create a Room Now
         </button>
       </div>
+      <Analytics/>
     </div>
   );
 };

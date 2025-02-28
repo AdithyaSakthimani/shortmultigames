@@ -35,16 +35,17 @@ const Footer = () => {
           </div>
         </div>
         
-        <div className="footer-wave">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 100" preserveAspectRatio="none">
-            <path d="M0,0 C240,95 480,100 720,70 C960,40 1200,100 1440,85 L1440,100 L0,100 Z" fill="#f3f4f8"></path>
-          </svg>
-        </div>
+       
         
         <div className="copyright">
           <p>© 2025 Duo Net. All rights reserved.</p>
         </div>
       </div>
+      <div className="footer-wave">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 100" preserveAspectRatio="none">
+            <path d="M0,0 C240,95 480,100 720,70 C960,40 1200,100 1440,85 L1440,100 L0,100 Z" fill="#f3f4f8"></path>
+          </svg>
+        </div>
     </footer>
   );
 };
