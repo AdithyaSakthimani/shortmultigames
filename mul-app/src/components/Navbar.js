@@ -1,55 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Navbar.css';
 import { useNavigate } from 'react-router-dom';
 
 const Navbar = () => {
-  const navigate = useNavigate() ; 
   const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [hoverEffect, setHoverEffect] = useState(false);
+  const navigate = useNavigate();
+
   
-  const toggleMenu = () => {
-    setMenuOpen(!menuOpen);
-  };
+
   
   return (
-    <nav className="navbar">
+    <nav className={`navbar`}>
       <div className="navbar-container">
         {/* Logo */}
-        <div className="logo-container" onClick={()=>navigate('/')}>
-          <div className="logo-circle">
+        <div 
+          className="nav-logo-container"
+          onMouseEnter={() => setHoverEffect(true)}
+          onMouseLeave={() => setHoverEffect(false)}
+          onClick={()=>navigate('/')}
+        >
+          <div className={`logo-circle ${hoverEffect ? 'pulse' : ''}`}>
             <div className="logo-inner-circle"></div>
           </div>
-          <span className="logo-text">Duo Net</span>
+          <span className="logo-text">DuoNet</span>
         </div>
-        
-        {/* Desktop Menu */}
-        <div className="nav-links">
-          <a href="#" className="nav-link">Home</a>
-          <a href="#" className="nav-link">Features</a>
-          <a href="#" className="nav-link">Community</a>
-        </div>
-        
-        {/* CTA Button */}
- 
-        
-        {/* Mobile Menu Button */}
-        <div className="menu-button" onClick={toggleMenu}>
-          <div className={`menu-icon ${menuOpen ? 'open' : ''}`}>
-            <span></span>
-            <span></span>
-            <span></span>
-          </div>
-        </div>
-      </div>
-      
-      {/* Mobile Menu */}
-      <div className={`mobile-menu ${menuOpen ? 'open' : ''}`}>
-        <a href="#" className="mobile-link">Home</a>
-        <a href="#" className="mobile-link">Features</a>
-        <a href="#" className="mobile-link">Pricing</a>
-        <a href="#" className="mobile-link">Community</a>
-        <button className="mobile-cta-button">Get Started</button>
       </div>
     </nav>
   );
 };
-export default Navbar ; 
+
+export default Navbar;

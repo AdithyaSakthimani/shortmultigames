@@ -25,9 +25,37 @@ const Othello = () => {
   const player1 = playerStatus.player1;
   const player2 = playerStatus.player2;
   const currentPlayerName = isBlackNext ? (player1 || 'Player 1') : (player2 || 'Player 2');
-  const [board, setBoard] = useState(()=>{
-    return Array(8).fill(null).map(() => Array(8).fill(null))});
+  const [board, setBoard] = useState(() => {
+    const savedSession = localStorage.getItem('gameSession');
+    let savedCode = null;
     
+    if (savedSession) {
+      const { savedCode: code } = JSON.parse(savedSession);
+      savedCode = code;
+    }
+    
+    // If we have a code, try to load the saved board
+    if (savedCode) {
+      const savedBoard = JSON.parse(localStorage.getItem(`othello_board_${savedCode}`));
+      if (savedBoard) {
+        return savedBoard;
+      }
+    }
+    
+    // Otherwise, create a new board with initial positions
+    const initialBoard = Array(8).fill(null).map(() => Array(8).fill(null));
+    initialBoard[3][3] = 'white';
+    initialBoard[3][4] = 'black';
+    initialBoard[4][3] = 'black';
+    initialBoard[4][4] = 'white';
+    return initialBoard;
+  });
+  useEffect(() => {
+    if (code) {
+      localStorage.setItem(`othello_board_${code}`, JSON.stringify(board));
+      localStorage.setItem(`othello_turn_${code}`, JSON.stringify(isBlackNext));
+    }
+  }, [board, isBlackNext, code]);
   useEffect(() => {
     const savedSession = localStorage.getItem('gameSession');
     if (savedSession) {
@@ -96,6 +124,7 @@ const Othello = () => {
         socket.io.off("reconnect");
       };
     }, [code, playerName, socket,  setPlayerStatus, setCode, setPlayerName]);
+  
   const checkValidMoves = (currentBoard, isBlack) => {
     const color = isBlack ? 'black' : 'white';
     const valid = [];
@@ -126,18 +155,38 @@ const Othello = () => {
   };
   
   useEffect(() => {
-    const newBoard = Array(8).fill(null).map(() => Array(8).fill(null));
-    newBoard[3][3] = 'white';
-    newBoard[3][4] = 'black';
-    newBoard[4][3] = 'black';
-    newBoard[4][4] = 'white';
-    setBoard(newBoard);
-    checkAndUpdateValidMoves(newBoard, true);
+    if (code) {
+      const savedBoard = JSON.parse(localStorage.getItem(`othello_board_${code}`));
+      const savedTurn = JSON.parse(localStorage.getItem(`othello_turn_${code}`));
+      
+      if (savedBoard) {
+        setBoard(savedBoard);
+      } else {
+        // Create new board with initial setup if no saved board exists
+        const newBoard = Array(8).fill(null).map(() => Array(8).fill(null));
+        newBoard[3][3] = 'white';
+        newBoard[3][4] = 'black';
+        newBoard[4][3] = 'black';
+        newBoard[4][4] = 'white';
+        setBoard(newBoard);
+      }
+      
+      // Restore the turn if it exists, otherwise default to true (black's turn)
+      if (savedTurn !== null) {
+        setIsBlackNext(savedTurn);
+      }
+      
+      // Check valid moves based on the loaded board and turn
+      const boardToCheck = savedBoard || board;
+      checkAndUpdateValidMoves(boardToCheck, savedTurn !== null ? savedTurn : isBlackNext);
+    }
     
-    // Load saved scores from localStorage if available
-    const savedScores = localStorage.getItem(`othello-scores-${code}`);
-    if (savedScores) {
-      setScore(JSON.parse(savedScores));
+    // Load saved scores if they exist
+    if (code) {
+      const savedScores = localStorage.getItem(`othello-scores-${code}`);
+      if (savedScores) {
+        setScore(JSON.parse(savedScores));
+      }
     }
   }, [code]);
 
@@ -152,7 +201,10 @@ const Othello = () => {
 
       setBoard(data.board);
       setIsBlackNext(data.isBlackNext);
-      
+      if (code) {
+        localStorage.setItem(`othello_board_${code}`, JSON.stringify(data.board));
+        localStorage.setItem(`othello_turn_${code}`, JSON.stringify(data.isBlackNext));
+      }
       // Update win scores if provided in the game update
       if (data.score) {
         setScore(data.score);

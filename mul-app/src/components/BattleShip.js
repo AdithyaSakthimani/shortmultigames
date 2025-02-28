@@ -13,22 +13,71 @@ const Battleship = () => {
     { name: 'Destroyer', size: 2 }
   ];
   
-  const [playerBoard, setPlayerBoard] = useState(Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill(null)));
-  const [opponentBoard, setOpponentBoard] = useState(Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill(null)));
-  const [shipsToPlace, setShipsToPlace] = useState([...SHIPS]);
+
+  const [shipsToPlace, setShipsToPlace] = useState(() => {
+    const savedSession = localStorage.getItem('gameSession');
+    let savedCode = null;
+    
+    if (savedSession) {
+      const { savedCode: code } = JSON.parse(savedSession);
+      savedCode = code;
+    }
+    
+    if (savedCode) {
+      const savedShips = JSON.parse(localStorage.getItem(`battleship_shipsToPlace_${savedCode}`));
+      if (savedShips) {
+        return savedShips;
+      }
+    }
+    
+    return [...SHIPS];
+  });
   const [currentShip, setCurrentShip] = useState(null);
   const [orientation, setOrientation] = useState('horizontal');
-  const [gamePhase, setGamePhase] = useState('setup'); // setup, placement, playing, ended
-  const [isPlayerTurn, setIsPlayerTurn] = useState(false);
+  const [gamePhase, setGamePhase] = useState(()=> {const savedSession = localStorage.getItem('gameSession');
+    let savedCode = null;
+    
+    if (savedSession) {
+      const { savedCode: code } = JSON.parse(savedSession);
+      savedCode = code;
+    }
+    
+    if (savedCode) {
+      const savedTurn = JSON.parse(localStorage.getItem(`battleship_phase_${savedCode}`));
+      if (savedTurn !== null) {
+        return savedTurn;
+      }
+    }
+    
+    return 'setup';}); // setup, placement, playing, ended
+  const [isPlayerTurn, setIsPlayerTurn] = useState(()=> {const savedSession = localStorage.getItem('gameSession');
+  let savedCode = null;
+  
+  if (savedSession) {
+    const { savedCode: code } = JSON.parse(savedSession);
+    savedCode = code;
+  }
+  
+  if (savedCode) {
+    const savedTurn = JSON.parse(localStorage.getItem(`battleship_turn_${savedCode}`));
+    if (savedTurn !== null) {
+      return savedTurn;
+    }
+  }
+  
+  return false;})
   const [winner, setWinner] = useState(null);
   const [error, setError] = useState(null);
-
+  const [playersPresent, setPlayersPresent] = useState(false);
+      const [connectionError, setConnectionError] = useState(false);
   const contextValue = useContext(NoteContext);
   const socket = contextValue?.socket;
   const code = contextValue?.code;
   const playerStatus = contextValue?.playerStatus || {};
   const playerName = contextValue?.playerName;
-
+  const setPlayerStatus = contextValue?.setPlayerStatus;
+  const setPlayerName = contextValue?.setPlayerName;
+  const setCode = contextValue?.setCode;
   // Initialize score from localStorage or default to 0
   const [score, setScore] = useState(() => {
     const savedScore = localStorage.getItem(`battleship_score_${code}`);
@@ -38,8 +87,130 @@ const Battleship = () => {
   const player1 = playerStatus.player1;
   const player2 = playerStatus.player2;
   const currentPlayer = isPlayerTurn ? playerName : (playerName === player1 ? player2 : player1);
-
+  const [playerBoard, setPlayerBoard] = useState(() => {
+    const savedSession = localStorage.getItem('gameSession');
+    let savedCode = null;
+    
+    if (savedSession) {
+      const { savedCode: code } = JSON.parse(savedSession);
+      savedCode = code;
+    }
+    
+    // If we have a code, try to load the saved board
+    if (savedCode) {
+      const savedBoard = JSON.parse(localStorage.getItem(`battleship_playerBoard_${savedCode}`));
+      if (savedBoard) {
+        return savedBoard;
+      }
+    }
+    
+    // Otherwise, create a new board with initial positions
+    const initialBoard = Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill(null));
+    return initialBoard;
+  });
+  const [opponentBoard, setOpponentBoard] = useState(() => {
+    const savedSession = localStorage.getItem('gameSession');
+    let savedCode = null;
+    
+    if (savedSession) {
+      const { savedCode: code } = JSON.parse(savedSession);
+      savedCode = code;
+    }
+    
+    // If we have a code, try to load the saved board
+    if (savedCode) {
+      const savedBoard = JSON.parse(localStorage.getItem(`battleship_opponentBoard_${savedCode}`));
+      if (savedBoard) {
+        return savedBoard;
+      }
+    }
+    
+    // Otherwise, create a new board with initial positions
+    const initialBoard = Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill(null));
+    return initialBoard;
+  });
   // Save score to localStorage whenever it changes
+  useEffect(() => {
+      if (code) {
+        localStorage.setItem(`battleship_opponentBoard_${code}`, JSON.stringify(opponentBoard));
+        localStorage.setItem(`battleship_playerBoard_${code}`, JSON.stringify(playerBoard));
+        localStorage.setItem(`battleship_turn_${code}`, JSON.stringify(isPlayerTurn));
+        localStorage.setItem(`battleship_phase_${code}`, JSON.stringify(gamePhase));
+        localStorage.setItem(`battleship_shipsToPlace_${code}`, JSON.stringify(shipsToPlace));
+      }
+    }, [playerBoard,opponentBoard, isPlayerTurn, gamePhase,code,shipsToPlace]);
+    useEffect(()=>{if (code) 
+          {const savedTurn = JSON.parse(localStorage.getItem(`battleship_turn_${code}`));
+          const savedPhase = JSON.parse(localStorage.getItem(`battleship_phase_${code}`));
+          const savedShips = JSON.parse(localStorage.getItem(`battleship_shipsToPlace_${code}`));
+          if (savedTurn !== null) {
+            setIsPlayerTurn(savedTurn);
+          }
+          if (savedPhase !== null) {
+            setGamePhase(savedPhase);
+          }
+          if (savedShips !== null) {
+            setShipsToPlace(savedShips);
+          }}
+        },[code]);
+  useEffect(() => {
+        if (!code || !playerName || !socket) {
+          return;
+        }
+    
+        const joinRoom = () => {
+          console.log(`Joining room ${code} as ${playerName}`);
+          socket.emit("joinRoom", playerName, code);
+        };
+    
+        joinRoom();
+    
+        const handlePlayerStatus = (status) => {
+          if (!status) {
+            setConnectionError(true);
+            return;
+          }
+          setConnectionError(false);
+          setPlayerStatus(status);
+          setPlayersPresent(!!(status.player1 && status.player2));
+        };
+    
+        const handleDisconnect = () => {
+          setConnectionError(true);
+          console.log("Disconnected from server");
+        };
+    
+        const handleConnect = () => {
+          console.log("Connected to server, rejoining room...");
+          joinRoom();
+          setConnectionError(false);
+        };
+    
+        const handleRoomJoined = (response) => {
+          if (!response.success) {
+            console.error("Failed to join room:", response.error);
+            localStorage.removeItem('gameSession');
+            setCode(null);
+            setPlayerName("");
+          } else {
+            console.log("Successfully joined room");
+          }
+        };
+    
+        socket.on("playerStatus", handlePlayerStatus);
+        socket.on("disconnect", handleDisconnect);
+        socket.on("connect", handleConnect);
+        socket.on("roomJoined", handleRoomJoined);
+        socket.io.on("reconnect", joinRoom);
+    
+        return () => {
+          socket.off("playerStatus", handlePlayerStatus);
+          socket.off("disconnect", handleDisconnect);
+          socket.off("connect", handleConnect);
+          socket.off("roomJoined", handleRoomJoined);
+          socket.io.off("reconnect");
+        };
+      }, [code, playerName, socket,  setPlayerStatus, setCode, setPlayerName]);
   useEffect(() => {
     if (code && score) {
       localStorage.setItem(`battleship_score_${code}`, JSON.stringify(score));

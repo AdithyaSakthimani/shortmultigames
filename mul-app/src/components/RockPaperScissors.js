@@ -6,11 +6,16 @@ const RockPaperScissors = () => {
   const [result, setResult] = useState(null);
   const [opponent, setOpponent] = useState(null);
   const [gameState, setGameState] = useState('choosing');
+  const [connectionError, setConnectionError] = useState(false);
+  const [playersPresent, setPlayersPresent] = useState(false);
   const contextValue = useContext(NoteContext);
   const socket = contextValue?.socket;
   const code = contextValue?.code;
+  const setCode = contextValue?.setCode;
   const playerName = contextValue?.playerName;
   const playerStatus = contextValue?.playerStatus || {};
+  const setPlayerName = contextValue?.setPlayerName;
+  const setPlayerStatus = contextValue?.setPlayerStatus;
   const [scores, setScores] = useState(() => {
     try {
       const savedScores = localStorage.getItem(`rpsScores_${code}`);
@@ -37,7 +42,64 @@ const RockPaperScissors = () => {
     }
   });
 
-
+  useEffect(() => {
+          if (!code || !playerName || !socket) {
+            return;
+          }
+      
+          const joinRoom = () => {
+            console.log(`Joining room ${code} as ${playerName}`);
+            socket.emit("joinRoom", playerName, code);
+          };
+      
+          joinRoom();
+      
+          const handlePlayerStatus = (status) => {
+            if (!status) {
+              setConnectionError(true);
+              return;
+            }
+            setConnectionError(false);
+            setPlayerStatus(status);
+            setPlayersPresent(!!(status.player1 && status.player2));
+          };
+      
+          const handleDisconnect = () => {
+            setConnectionError(true);
+            console.log("Disconnected from server");
+          };
+      
+          const handleConnect = () => {
+            console.log("Connected to server, rejoining room...");
+            joinRoom();
+            setConnectionError(false);
+          };
+      
+          const handleRoomJoined = (response) => {
+            if (!response.success) {
+              console.error("Failed to join room:", response.error);
+              localStorage.removeItem('gameSession');
+              setCode(null);
+              setPlayerName("");
+            } else {
+              console.log("Successfully joined room");
+            }
+          };
+      
+          socket.on("playerStatus", handlePlayerStatus);
+          socket.on("disconnect", handleDisconnect);
+          socket.on("connect", handleConnect);
+          socket.on("roomJoined", handleRoomJoined);
+          socket.io.on("reconnect", joinRoom);
+      
+          return () => {
+            socket.off("playerStatus", handlePlayerStatus);
+            socket.off("disconnect", handleDisconnect);
+            socket.off("connect", handleConnect);
+            socket.off("roomJoined", handleRoomJoined);
+            socket.io.off("reconnect");
+          };
+        }, [code, playerName, socket,  setPlayerStatus, setCode, setPlayerName]);
   useEffect(() => {
     if (playerStatus.player1 || playerStatus.player2) {
       setScores(prevScores => {

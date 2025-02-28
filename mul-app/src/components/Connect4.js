@@ -3,17 +3,35 @@ import './Connect4.css';
 import NoteContext from './NoteContext';
 
 const Connect4 = () => {
-  const [board, setBoard] = useState(Array(42).fill(null));
-  const [isRedNext, setIsRedNext] = useState(true);
+  const [isRedNext, setIsRedNext] = useState(()=>{const savedSession = localStorage.getItem('gameSession');
+  let savedCode = null;
+  
+  if (savedSession) {
+    const { savedCode: code } = JSON.parse(savedSession);
+    savedCode = code;
+  }
+  
+  if (savedCode) {
+    const savedTurn = JSON.parse(localStorage.getItem(`connect4_turn_${savedCode}`));
+    if (savedTurn !== null) {
+      return savedTurn;
+    }
+  }
+  
+  return true;} );
   const [currentColumn, setCurrentColumn] = useState(null);
   const [winner, setWinner] = useState({ mark: null, name: null });
   const [error, setError] = useState(null);
-  
+  const [playersPresent, setPlayersPresent] = useState(false);
+      const [connectionError, setConnectionError] = useState(false);
   const contextValue = useContext(NoteContext);
   const socket = contextValue?.socket;
   const code = contextValue?.code;
   const playerStatus = contextValue?.playerStatus || {};
+  const setPlayerStatus = contextValue?.setPlayerStatus;
+  const setCode = contextValue?.setCode;
   const playerName = contextValue?.playerName;
+  const setPlayerName = contextValue?.setPlayerName;
 
   // Initialize score from localStorage or default to 0
   const [score, setScore] = useState(() => {
@@ -24,69 +42,99 @@ const Connect4 = () => {
   const player1 = playerStatus.player1;
   const player2 = playerStatus.player2;
   const currentPlayerName = isRedNext ? (player1 || 'Player 1') : (player2 || 'Player 2');
-
+  const [board, setBoard] = useState(()=>{
+  
+      const savedSession = localStorage.getItem('gameSession');
+      let savedCode = null;
+      
+      if (savedSession) {
+        const { savedCode: code } = JSON.parse(savedSession);
+        savedCode = code;
+      }
+      if (savedCode) {
+        const savedBoard = JSON.parse(localStorage.getItem(`connect4_board_${savedCode}`));
+        if (savedBoard) {
+          return savedBoard;
+        }
+      }
+      const initialBoard = Array(42).fill(null)
+      return initialBoard;});
   // Save score to localStorage whenever it changes
   useEffect(() => {
     if (code && score) {
       localStorage.setItem(`connect4_score_${code}`, JSON.stringify(score));
     }
   }, [score, code]);
-
-  const calculateWinner = (squares) => {
-    // Check horizontal
-    for (let row = 0; row < 6; row++) {
-      for (let col = 0; col < 4; col++) {
-        const index = row * 7 + col;
-        if (squares[index] &&
-            squares[index] === squares[index + 1] &&
-            squares[index] === squares[index + 2] &&
-            squares[index] === squares[index + 3]) {
-          return squares[index];
+  useEffect(() => {
+        if (code) {
+          localStorage.setItem(`connect4_board_${code}`, JSON.stringify(board));
+          localStorage.setItem(`connect4_turn_${code}`, JSON.stringify(isRedNext));
         }
-      }
-    }
-
-    // Check vertical
-    for (let row = 0; row < 3; row++) {
-      for (let col = 0; col < 7; col++) {
-        const index = row * 7 + col;
-        if (squares[index] &&
-            squares[index] === squares[index + 7] &&
-            squares[index] === squares[index + 14] &&
-            squares[index] === squares[index + 21]) {
-          return squares[index];
+      }, [board, isRedNext, code]);
+      useEffect(()=>{if (code) 
+        {const savedTurn = JSON.parse(localStorage.getItem(`connect4_turn_${code}`));
+        if (savedTurn !== null) {
+          setIsRedNext(savedTurn);
+        }}
+      },[code]);
+  useEffect(() => {
+        if (!code || !playerName || !socket) {
+          return;
         }
-      }
-    }
-
-    // Check diagonal (positive slope)
-    for (let row = 0; row < 3; row++) {
-      for (let col = 0; col < 4; col++) {
-        const index = row * 7 + col;
-        if (squares[index] &&
-            squares[index] === squares[index + 8] &&
-            squares[index] === squares[index + 16] &&
-            squares[index] === squares[index + 24]) {
-          return squares[index];
-        }
-      }
-    }
-
-    // Check diagonal (negative slope)
-    for (let row = 3; row < 6; row++) {
-      for (let col = 0; col < 4; col++) {
-        const index = row * 7 + col;
-        if (squares[index] &&
-            squares[index] === squares[index - 6] &&
-            squares[index] === squares[index - 12] &&
-            squares[index] === squares[index - 18]) {
-          return squares[index];
-        }
-      }
-    }
-
-    return null;
-  };
+    
+        const joinRoom = () => {
+          console.log(`Joining room ${code} as ${playerName}`);
+          socket.emit("joinRoom", playerName, code);
+        };
+    
+        joinRoom();
+    
+        const handlePlayerStatus = (status) => {
+          if (!status) {
+            setConnectionError(true);
+            return;
+          }
+          setConnectionError(false);
+          setPlayerStatus(status);
+          setPlayersPresent(!!(status.player1 && status.player2));
+        };
+    
+        const handleDisconnect = () => {
+          setConnectionError(true);
+          console.log("Disconnected from server");
+        };
+    
+        const handleConnect = () => {
+          console.log("Connected to server, rejoining room...");
+          joinRoom();
+          setConnectionError(false);
+        };
+    
+        const handleRoomJoined = (response) => {
+          if (!response.success) {
+            console.error("Failed to join room:", response.error);
+            localStorage.removeItem('gameSession');
+            setCode(null);
+            setPlayerName("");
+          } else {
+            console.log("Successfully joined room");
+          }
+        };
+    
+        socket.on("playerStatus", handlePlayerStatus);
+        socket.on("disconnect", handleDisconnect);
+        socket.on("connect", handleConnect);
+        socket.on("roomJoined", handleRoomJoined);
+        socket.io.on("reconnect", joinRoom);
+    
+        return () => {
+          socket.off("playerStatus", handlePlayerStatus);
+          socket.off("disconnect", handleDisconnect);
+          socket.off("connect", handleConnect);
+          socket.off("roomJoined", handleRoomJoined);
+          socket.io.off("reconnect");
+        };
+      }, [code, playerName, socket,  setPlayerStatus, setCode, setPlayerName]);
 
   useEffect(() => {
     if (!socket) {

@@ -4,16 +4,36 @@ import './TicTacToe.css';
 import NoteContext from './NoteContext';
 
 const TicTacToe = () => {
-  const [board, setBoard] = useState(Array(9).fill(null));
-  const [isXNext, setIsXNext] = useState(true);
+  const [isXNext, setIsXNext] = useState(() => {
+    const savedSession = localStorage.getItem('gameSession');
+    let savedCode = null;
+    
+    if (savedSession) {
+      const { savedCode: code } = JSON.parse(savedSession);
+      savedCode = code;
+    }
+    
+    if (savedCode) {
+      const savedTurn = JSON.parse(localStorage.getItem(`tictactoe_turn_${savedCode}`));
+      if (savedTurn !== null) {
+        return savedTurn;
+      }
+    }
+    
+    return true; // Default value if no saved state
+  });
   const [winner, setWinner] = useState({ mark: null, name: null });
   const [error, setError] = useState(null);
-  
+  const [playersPresent, setPlayersPresent] = useState(false);
+  const [connectionError, setConnectionError] = useState(false);
   const contextValue = useContext(NoteContext);
   const socket = contextValue?.socket;
   const code = contextValue?.code;
   const playerStatus = contextValue?.playerStatus || {};
   const playerName = contextValue?.playerName;
+  const setPlayerStatus = contextValue?.setPlayerStatus;
+  const setCode = contextValue?.setCode;
+  const setPlayerName = contextValue?.setPlayerName;
 
   // Initialize score from localStorage or default to 0
   const [score, setScore] = useState(() => {
@@ -24,14 +44,99 @@ const TicTacToe = () => {
   const player1 = playerStatus.player1;
   const player2 = playerStatus.player2;
   const currentPlayerName = isXNext ? (player1 || 'Player 1') : (player2 || 'Player 2');
+  const [board, setBoard] = useState(()=>{
 
+    const savedSession = localStorage.getItem('gameSession');
+    let savedCode = null;
+    
+    if (savedSession) {
+      const { savedCode: code } = JSON.parse(savedSession);
+      savedCode = code;
+    }
+    if (savedCode) {
+      const savedBoard = JSON.parse(localStorage.getItem(`tictactoe_board_${savedCode}`));
+      if (savedBoard) {
+        return savedBoard;
+      }
+    }
+    const initialBoard = Array(9).fill(null)
+    return initialBoard;});
+  useEffect(() => {
+      if (code) {
+        localStorage.setItem(`tictactoe_board_${code}`, JSON.stringify(board));
+        localStorage.setItem(`tictactoe_turn_${code}`, JSON.stringify(isXNext));
+      }
+    }, [board, isXNext, code]);
+    useEffect(()=>{if (code) 
+      {const savedTurn = JSON.parse(localStorage.getItem(`tictactoe_turn_${code}`));
+      if (savedTurn !== null) {
+        setIsXNext(savedTurn);
+      }}
+    },[code]);
   // Save score to localStorage whenever it changes
   useEffect(() => {
     if (code && score) {
       localStorage.setItem(`tictactoe_score_${code}`, JSON.stringify(score));
     }
   }, [score, code]);
-
+  useEffect(() => {
+        if (!code || !playerName || !socket) {
+          return;
+        }
+    
+        const joinRoom = () => {
+          console.log(`Joining room ${code} as ${playerName}`);
+          socket.emit("joinRoom", playerName, code);
+        };
+    
+        joinRoom();
+    
+        const handlePlayerStatus = (status) => {
+          if (!status) {
+            setConnectionError(true);
+            return;
+          }
+          setConnectionError(false);
+          setPlayerStatus(status);
+          setPlayersPresent(!!(status.player1 && status.player2));
+        };
+    
+        const handleDisconnect = () => {
+          setConnectionError(true);
+          console.log("Disconnected from server");
+        };
+    
+        const handleConnect = () => {
+          console.log("Connected to server, rejoining room...");
+          joinRoom();
+          setConnectionError(false);
+        };
+    
+        const handleRoomJoined = (response) => {
+          if (!response.success) {
+            console.error("Failed to join room:", response.error);
+            localStorage.removeItem('gameSession');
+            setCode(null);
+            setPlayerName("");
+          } else {
+            console.log("Successfully joined room");
+          }
+        };
+    
+        socket.on("playerStatus", handlePlayerStatus);
+        socket.on("disconnect", handleDisconnect);
+        socket.on("connect", handleConnect);
+        socket.on("roomJoined", handleRoomJoined);
+        socket.io.on("reconnect", joinRoom);
+    
+        return () => {
+          socket.off("playerStatus", handlePlayerStatus);
+          socket.off("disconnect", handleDisconnect);
+          socket.off("connect", handleConnect);
+          socket.off("roomJoined", handleRoomJoined);
+          socket.io.off("reconnect");
+        };
+      }, [code, playerName, socket,  setPlayerStatus, setCode, setPlayerName]);
   useEffect(() => {
     if (!socket) return;
 
@@ -62,7 +167,29 @@ const TicTacToe = () => {
 
     return () => socket.off('gameUpdate');
   }, [socket, player1, player2]);
-
+  const getWinningCombination = (board) => {
+    const winningCombinations = [
+      [0, 1, 2], // Top row
+      [3, 4, 5], // Middle row
+      [6, 7, 8], // Bottom row
+      [0, 3, 6], // Left column
+      [1, 4, 7], // Middle column
+      [2, 5, 8], // Right column
+      [0, 4, 8], // Diagonal from top-left to bottom-right
+      [2, 4, 6], // Diagonal from top-right to bottom-left
+    ];
+  
+    for (let combination of winningCombinations) {
+      const [a, b, c] = combination;
+      if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+        return combination;
+      }
+    }
+  
+    return null;
+  };
+  
+  const winningCombination = winner.mark ? getWinningCombination(board) : null;
   const handleClick = (index) => {
     if (!socket || !code) {
       setError('Connection not available');
@@ -90,15 +217,18 @@ const TicTacToe = () => {
     });
   };
 
-  const renderCell = (index) => {
+  const renderCell = (index, winningCombination) => {
     const cellValue = board[index];
     const isCurrentPlayer = (isXNext && playerName === player1) || 
                           (!isXNext && playerName === player2);
-
+    const isWinningCell = winningCombination && winningCombination.includes(index);
+    const combinationIndex = isWinningCell ? winningCombination.indexOf(index) : null;
+  
     return (
       <div 
         key={index}
-        className={`cell ${isCurrentPlayer ? 'active' : ''}`}
+        className={`cell ${isCurrentPlayer ? 'active' : ''} ${isWinningCell ? 'winning-cell' : ''}`}
+        data-combination={combinationIndex}
         onClick={() => handleClick(index)}
       >
         {cellValue === 'X' && <X className="x-icon" />}
@@ -129,10 +259,17 @@ const TicTacToe = () => {
   return (
       <div className="game-container">
         {/* Left Side - Game Board */}
-        <div className="game-board-container">
-          <div className="game-board">
-            {board.map((_, index) => renderCell(index))}
+        <div className="game-info-mobile">
+            {winner.mark 
+              ? winner.mark === 'Draw' 
+                ? "It's a Draw!" 
+                : `${winner.name} Wins!`
+              : `${currentPlayerName}'s Turn`}
           </div>
+        <div className="game-board-container">
+        <div className="game-board">
+  {board.map((_, index) => renderCell(index, winningCombination))}
+</div>
         </div>
     
         {/* Right Side - Analytics */}
@@ -158,8 +295,7 @@ const TicTacToe = () => {
             <div>You are: {playerName}</div>
             <div>Current Turn: {currentPlayerName}</div>
           </div>
-    
-          <div className="game-info">
+          <div className="game-info-pc">
             {winner.mark 
               ? winner.mark === 'Draw' 
                 ? "It's a Draw!" 

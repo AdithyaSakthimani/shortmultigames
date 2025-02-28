@@ -2,7 +2,11 @@ import React, { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import NoteContext from "./NoteContext";
 import "./GameRoom.css";
-
+import tictactoeImg from './images/tictactoe.png';
+import Connect4Img from "./images/connect4.jpg";
+import RockPaperScissorsImg from "./images/rockpaperscissors.jpg";
+import othelloImg from "./images/othello.png";
+import battleshipImg from './images/batteship.jpg'
 const GameRoom = () => {
   const { 
     code, 
@@ -16,6 +20,35 @@ const GameRoom = () => {
   const navigate = useNavigate();
   const [playersPresent, setPlayersPresent] = useState(false);
   const [connectionError, setConnectionError] = useState(false);
+
+  // Game info for display
+  const gameInfo = {
+    tictactoe: {
+      title: "Tic Tac Toe",
+      description: "Classic 3x3 grid game. Be the first to get three in a row!",
+      placeholderImage: tictactoeImg
+    },
+    connect4: {
+      title: "Connect 4",
+      description: "Drop discs to connect four of your pieces in a row while preventing your opponent from doing the same.",
+      placeholderImage: Connect4Img
+    },
+    rockpaperscissors: {
+      title: "Rock Paper Scissors",
+      description: "Test your luck and strategy in this classic hand game.",
+      placeholderImage: RockPaperScissorsImg
+    },
+    othello: {
+      title: "Othello",
+      description: "Strategic board game where you flip pieces to capture territory.",
+      placeholderImage: othelloImg
+    },
+    battleship: {
+      title: "Battleship",
+      description: "Classic naval combat game. Locate and sink your opponent's fleet!",
+      placeholderImage: battleshipImg
+    }
+  };
 
   useEffect(() => {
     const savedSession = localStorage.getItem('gameSession');
@@ -124,7 +157,7 @@ const GameRoom = () => {
     <div className="gameroom-container">
       <div className="header">
         <h2 className="room-code">Room Code: {code}</h2>
-        <button className="button leave-button" onClick={handleLeaveRoom}>
+        <button className="leave-button" onClick={handleLeaveRoom}>
           Leave Room
         </button>
       </div>
@@ -135,35 +168,42 @@ const GameRoom = () => {
         </div>
       )}
 
-
-      {playersPresent && (
-        <div className="game-selection">
-          {["connect4", "tictactoe" , "rockpaperscissors","othello","battleship"].map((game) => (
-            <div key={game} className="game-item">
-              <h3 className="game-title">
-                {game === "connect4" ? "Connect 4" : ""}
-                {game === "tictactoe" ? "Tic Tac Toe" : ""}
-                {game === "rockpaperscissors" ? "Rock Paper Scissors" : ""}
-                {game === "othello" ? "Othello" : ""}
-                {game === "battleship" ? "BattleShip" : ""}
-              </h3>
-              <button
-                className="button start-button"
-                onClick={() => handleStartGame(game)}
-              >
-                Start Game
-              </button>
-            </div>
-          ))}
+      {playersPresent ? (
+        <>
+          <h1 style={{textAlign: 'center', marginBottom: '2rem', color: '#333'}}>
+            Select a Game to Play
+          </h1>
+          <div className="game-selection">
+            {Object.keys(gameInfo).map((gameKey) => (
+              <div key={gameKey} className="game-item">
+                <div className="game-image-container">
+                  <img 
+                    src={gameInfo[gameKey].placeholderImage} 
+                    alt={gameInfo[gameKey].title}
+                    className="game-image" 
+                  />
+                </div>
+                <div className="game-content">
+                  <h3 className="my-game-title">{gameInfo[gameKey].title}</h3>
+                  <p style={{marginBottom: '1rem', color: '#6c757d', fontSize: '0.9rem'}}>
+                    {gameInfo[gameKey].description}
+                  </p>
+                  <button
+                    className="start-button"
+                    onClick={() => handleStartGame(gameKey)}
+                  >
+                    Start Game
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      ) : (
+        <div className="status">
+          <div className="waiting-text">Waiting for another player to join...</div>
         </div>
       )}
-      <div className="status">
-        {!playersPresent ? (
-          <div className="waiting-text">Waiting for another player...</div>
-        ) : (
-          <div className="connected-text">Players connected!</div>
-        )}
-      </div>
     </div>
   );
 };
