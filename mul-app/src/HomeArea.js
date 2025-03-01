@@ -16,7 +16,8 @@ import {
   Scissors,
   Clock,
   Globe,
-  Sparkles
+  Sparkles,
+  CircleDollarSign
 } from 'lucide-react';
 import { Analytics } from "@vercel/analytics/react"
 import {
@@ -80,9 +81,9 @@ const HomeArea = () => {
       description: "Our servers are always online, so you can play whenever inspiration strikes"
     },
     {
-      icon: <Trophy className="feature-icon" />,
-      title: "Achievement System",
-      description: "Earn badges and track your progress as you master different games"
+      icon: <CircleDollarSign className="feature-icon"/>,
+      title: "Completely Free to Play",
+      description: "Enjoy all games and features without spending a single penny"
     },
     {
       icon: <Sparkles className="feature-icon" />,
@@ -130,7 +131,7 @@ const HomeArea = () => {
           </div>
           <h1 className="title">Multiplayer Battle Arena</h1>
           <p className="subtitle">
-            Challenge your friends in epic battles and become the ultimate champion!
+          Play classic strategy games with friends or rivals in real-time. No sign-ups, no downloads—just pure competitive fun!
           </p>
           <button
             onClick={() => navigate('/rooms')}
