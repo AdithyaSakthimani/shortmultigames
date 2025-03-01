@@ -18,8 +18,6 @@ body {
 }
 
 
-
-/* Keep the hero section as is */
 .hero {
   display: flex;
   flex-direction: column;
@@ -149,7 +147,7 @@ body {
   padding-bottom: 0.5rem;
   left: 50%;
   transform: translateX(-50%);
-  font-family: "Sacramento", cursive;
+  font-family: "Dancing Script", cursive !important;
   letter-spacing: 2px;
 }
 
@@ -533,7 +531,7 @@ body {
   background-clip: text;
   color: transparent;
   font-weight: 700;
-  font-family: "Sacramento", cursive;
+  font-family: "Dancing Script", cursive !important;
 }
 
 .bottom-cta p {
@@ -639,7 +637,7 @@ body {
   }
   
   .section-title, .features-title, .bottom-cta h2 {
-    font-size: 2rem;
+    font-size: 2.3rem;
   }
   
   .step-title, .game-title, .feature h3 {

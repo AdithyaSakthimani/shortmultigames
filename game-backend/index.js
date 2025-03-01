@@ -18,25 +18,35 @@ const io = new Server(server, {
 });
 
 let rooms = {};
-let publicRooms =[] ; 
+let publicRooms = []; 
+// Track room creators
+let roomCreators = {};
+
 io.on('connection', (socket) => {
   console.log(`New client connected: ${socket.id}`);
 
   socket.on('createRoom', (gameType = 'tictactoe') => {
     const roomCode = Math.random().toString(36).substr(2, 5);
     rooms[roomCode] = initializeGameState(gameType);
+    // Track who created this room
+    roomCreators[roomCode] = socket.id;
     socket.emit('getCode', roomCode);
     console.log(`Room created: ${roomCode} for ${gameType}`);
   });
+  
   socket.on('createPublicRoom', (roomName, gameType = 'tictactoe') => {
     const roomId = Math.random().toString(36).substr(2, 5);
     rooms[roomId] = initializeGameState(gameType);
+    
+    // Track who created this room
+    roomCreators[roomId] = socket.id;
     
     // Create public room with the structure your client expects
     const newPublicRoom = {
       roomName: roomName,
       roomId: roomId,
-      players: [] // Initialize empty players array
+      players: [], // Initialize empty players array
+      creatorSocketId: socket.id // Store the socket ID of the creator
     };
     
     publicRooms.push(newPublicRoom);
@@ -49,9 +59,44 @@ io.on('connection', (socket) => {
     
     console.log(`Public Room created: ${roomId} for ${gameType} with name ${roomName}`);
   });
+  
+  socket.on('deleteRoom', (roomId) => {
+    console.log(`Attempting to delete room ${roomId}`);
+    
+    // Check if room exists
+    if (!rooms[roomId]) {
+      socket.emit('deleteRoomResult', { success: false, error: "Room not found" });
+      return;
+    }
+    
+    // Check if this socket is the creator of the room
+    if (roomCreators[roomId] !== socket.id) {
+      socket.emit('deleteRoomResult', { success: false, error: "Only the room creator can delete this room" });
+      return;
+    }
+    
+    // Find and remove from public rooms array
+    const publicRoomIndex = publicRooms.findIndex(r => r.roomId === roomId);
+    if (publicRoomIndex !== -1) {
+      publicRooms.splice(publicRoomIndex, 1);
+    }
+    
+    // Delete the room and creator record
+    delete rooms[roomId];
+    delete roomCreators[roomId];
+    
+    // Notify all users the room has been deleted
+    io.emit('getPublicRooms', publicRooms);
+    io.emit('roomDeleted', roomId);
+    
+    socket.emit('deleteRoomResult', { success: true });
+    console.log(`Room ${roomId} deleted`);
+  });
+  
   socket.on('getPublicRooms', () => {
     socket.emit('getPublicRooms', publicRooms);
   });
+  
   socket.on('joinRoom', (name, roomCode) => {
     console.log(`Attempting to join room ${roomCode} as ${name}`);
     console.log('Current room state:', rooms[roomCode]);
@@ -322,6 +367,20 @@ io.on('connection', (socket) => {
     }
   
     socket.leave(roomCode);
+  });
+  
+  // Handle disconnections
+  socket.on('disconnect', () => {
+    console.log(`Client disconnected: ${socket.id}`);
+    
+    // Check if this socket was a room creator and handle accordingly
+    for (const roomId in roomCreators) {
+      if (roomCreators[roomId] === socket.id) {
+        console.log(`Room creator ${socket.id} for room ${roomId} disconnected`);
+        // You can choose to delete the room here or keep it active
+        // For now, we'll just keep track of the fact that the creator is gone
+      }
+    }
   });
 });
 

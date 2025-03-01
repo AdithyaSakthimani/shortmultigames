@@ -12,14 +12,19 @@ function HomePage() {
   const [roomName, setRoomName] = useState('');
   const [buttonClicked, setButtonClicked] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const[roomToggle,setRoomToggle] = useState(false) ;
-  const[publicPlayerName , setPublicPlayerName] = useState(''); 
+  const [roomToggle, setRoomToggle] = useState(false);
+  const [publicPlayerName, setPublicPlayerName] = useState({}); // Changed to an object to store names by roomId
+  const [selectedRoomId, setSelectedRoomId] = useState(null); // Track which room is selected
+  const [createdRooms, setCreatedRooms] = useState([]); // Track rooms created by this user
+
   useEffect(() => {
     if (!socket) return;
 
     socket.on('getCode', (myCode) => {
       console.log('Received Room Code:', myCode);
       setGenCode(myCode);
+      // Add this room to the list of rooms created by this user
+      setCreatedRooms(prev => [...prev, myCode]);
     });
 
     socket.on('getPublicRooms', (myPublicRooms) => {
@@ -36,6 +41,11 @@ function HomePage() {
       }
     });
 
+    socket.on('roomDeleted', (roomId) => {
+      // Remove from created rooms if it was created by this user
+      setCreatedRooms(prev => prev.filter(id => id !== roomId));
+    });
+
     // Request public rooms when component mounts
     socket.emit('getPublicRooms');
 
@@ -43,6 +53,7 @@ function HomePage() {
       socket.off('getCode');
       socket.off('roomJoined');
       socket.off('getPublicRooms');
+      socket.off('roomDeleted');
     };
   }, [socket, navigate, setCode, inputCode]);
 
@@ -75,14 +86,39 @@ function HomePage() {
     }
   };
 
-  const joinPublicRoom = (roomCode) => {
-    if (!socket || !publicPlayerName) {
+  const deletePublicRoom = (roomId) => {
+    if (window.confirm('Are you sure you want to delete this room?')) {
+      socket.emit('deleteRoom', roomId);
+      // We'll update the local state after receiving confirmation from the server
+    }
+  };
+
+  const toggleRoomJoin = (roomId) => {
+    setSelectedRoomId(roomId === selectedRoomId ? null : roomId);
+    setRoomToggle(roomId === selectedRoomId ? false : true);
+  };
+
+  const handlePublicPlayerNameChange = (roomId, value) => {
+    setPublicPlayerName(prev => ({
+      ...prev,
+      [roomId]: value
+    }));
+  };
+
+  const joinPublicRoom = (roomId) => {
+    if (!socket || !publicPlayerName[roomId]) {
       alert('Please enter your player name before joining a room');
       return;
     }
-    setPlayerName(publicPlayerName);
-    setInputCode(roomCode);
-    socket.emit('joinRoom', playerName, roomCode);
+    
+    // Set the player name from publicPlayerName[roomId]
+    setPlayerName(publicPlayerName[roomId]);
+    setInputCode(roomId);
+    socket.emit('joinRoom', publicPlayerName[roomId], roomId);
+  };
+
+  const isRoomCreator = (roomId) => {
+    return createdRooms.includes(roomId);
   };
 
   const renderPublicRooms = () => {
@@ -128,29 +164,46 @@ function HomePage() {
             <div key={index} className="room-item">
               <span className="room-name">{room.roomName}</span>
               <span className="room-players">Players: {room.players?.length || 0}</span>
-              <button 
-                className={`join-room-button${!roomToggle?'':'close'}`}
-                onClick={() => setRoomToggle((prev)=>!prev)}
-              >
-                {!roomToggle? 'Join' : 'close'}
-              </button>
-              {roomToggle?<div>
-                <div className="input-group">
-          <p className='display-playername'>Player Name</p>
-          <input
-            className="player-room-input-field"
-            value={publicPlayerName}
-            onChange={(e) => setPublicPlayerName(e.target.value)}
-            placeholder="Enter your name"
-          />
-        </div>
-                <button
-                  className="join-room-button"
-                  onClick={() => joinPublicRoom(room.roomId)}
+              
+              <div className="room-actions">
+                {isRoomCreator(room.roomId) && (
+                  <button 
+                    className="delete-room-button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deletePublicRoom(room.roomId);
+                    }}
+                  >
+                    Delete
+                  </button>
+                )}
+                <button 
+                  className={`join-room-button${selectedRoomId === room.roomId && roomToggle ? 'close' : ''}`}
+                  onClick={() => toggleRoomJoin(room.roomId)}
                 >
-                  Join
+                  {selectedRoomId !== room.roomId || !roomToggle ? 'Join' : 'Close'}
                 </button>
-              </div> : ''}
+              </div>
+              
+              {selectedRoomId === room.roomId && roomToggle && (
+                <div>
+                  <div className="input-group">
+                    <p className='display-playername'>Player Name</p>
+                    <input
+                      className="player-room-input-field"
+                      value={publicPlayerName[room.roomId] || ''}
+                      onChange={(e) => handlePublicPlayerNameChange(room.roomId, e.target.value)}
+                      placeholder="Enter your name"
+                    />
+                  </div>
+                  <button
+                    className="join-room-button"
+                    onClick={() => joinPublicRoom(room.roomId)}
+                  >
+                    Join
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>
