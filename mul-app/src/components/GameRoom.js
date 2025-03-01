@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import NoteContext from "./NoteContext";
 import "./GameRoom.css";
 import tictactoeImg from './images/tictactoe.png';
@@ -7,6 +7,7 @@ import Connect4Img from "./images/connect4.jpg";
 import RockPaperScissorsImg from "./images/rockpaperscissors.jpg";
 import othelloImg from "./images/othello.png";
 import battleshipImg from './images/batteship.jpg'
+
 const GameRoom = () => {
   const { 
     code, 
@@ -18,6 +19,7 @@ const GameRoom = () => {
     setPlayerStatus 
   } = useContext(NoteContext);
   const navigate = useNavigate();
+  const location = useLocation();
   const [playersPresent, setPlayersPresent] = useState(false);
   const [connectionError, setConnectionError] = useState(false);
 
@@ -121,7 +123,16 @@ const GameRoom = () => {
     socket.on("roomJoined", handleRoomJoined);
     socket.io.on("reconnect", joinRoom);
 
+    // Cleanup function - remove user from room when component unmounts
     return () => {
+      const newPath = window.location.pathname;
+      // Only leave room if navigating to home or rooms page
+      if (newPath === '/' || newPath === '/rooms') {
+        console.log(`Leaving room ${code} as ${playerName} due to navigation to ${newPath}`);
+        socket.emit("leaveRoom", code, playerName);
+        localStorage.removeItem('gameSession');
+      }
+      
       socket.off("playerStatus", handlePlayerStatus);
       socket.off("disconnect", handleDisconnect);
       socket.off("connect", handleConnect);
@@ -129,6 +140,21 @@ const GameRoom = () => {
       socket.io.off("reconnect");
     };
   }, [code, playerName, socket, navigate, setPlayerStatus, setCode, setPlayerName]);
+
+  // Add a listener for route changes
+  useEffect(() => {
+    const handleBeforeUnload = (event) => {
+      if (socket && code && playerName) {
+        socket.emit("leaveRoom", code, playerName);
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [socket, code, playerName]);
 
   const handleStartGame = (gameType) => {
     if (socket && code && playersPresent) {
@@ -142,6 +168,27 @@ const GameRoom = () => {
     localStorage.removeItem('gameSession');
     setCode(null);
     setPlayerName("");
+    navigate("/rooms");
+  };
+
+  // Custom navigation handlers for home and rooms routes
+  const navigateToHome = () => {
+    if (socket && code && playerName) {
+      socket.emit("leaveRoom", code, playerName);
+      localStorage.removeItem('gameSession');
+      setCode(null);
+      setPlayerName("");
+    }
+    navigate("/");
+  };
+
+  const navigateToRooms = () => {
+    if (socket && code && playerName) {
+      socket.emit("leaveRoom", code, playerName);
+      localStorage.removeItem('gameSession');
+      setCode(null);
+      setPlayerName("");
+    }
     navigate("/rooms");
   };
 
