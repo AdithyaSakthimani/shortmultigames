@@ -22,7 +22,7 @@ const GameRoom = () => {
   const location = useLocation();
   const [playersPresent, setPlayersPresent] = useState(false);
   const [connectionError, setConnectionError] = useState(false);
-
+  
   // Game info for display
   const gameInfo = {
     tictactoe: {
@@ -160,6 +160,7 @@ const GameRoom = () => {
     if (socket && code && playersPresent) {
       socket.emit("startGame", { gameType, roomCode: code });
       navigate(`/${gameType}`);
+      window.scrollTo({ top: 0});
     }
   };
 

@@ -19,6 +19,7 @@ const io = new Server(server, {
 
 let rooms = {};
 let publicRooms = []; 
+let waitingPlayers = []; 
 // Track room creators
 let roomCreators = {};
 
@@ -33,7 +34,62 @@ io.on('connection', (socket) => {
     socket.emit('getCode', roomCode);
     console.log(`Room created: ${roomCode} for ${gameType}`);
   });
-  
+  socket.on('findRandomMatch', (playerName) => {
+    console.log(`${playerName} is looking for a random match`);
+    
+    // Check if there's already someone waiting
+    if (waitingPlayers.length > 0) {
+      // Get the first waiting player
+      const waitingPlayer = waitingPlayers.shift();
+      
+      // If the waiting player is the same as current player, put back in queue
+      if (waitingPlayer.playerName === playerName) {
+        waitingPlayers.push({ socketId: socket.id, playerName });
+        socket.emit('waitingForMatch');
+        return;
+      }
+      
+      // Create a new room for these two players
+      const roomCode = Math.random().toString(36).substr(2, 5);
+      rooms[roomCode] = initializeGameState('tictactoe'); // Default to tictactoe
+      
+      // Set players in the room
+      rooms[roomCode].player1 = waitingPlayer.playerName;
+      rooms[roomCode].player2 = playerName;
+      
+      // Notify both players
+      socket.join(roomCode);
+      socket.emit('randomMatchFound', { roomCode });
+      
+      // Notify the waiting player through their socket
+      const waitingSocket = io.sockets.sockets.get(waitingPlayer.socketId);
+      if (waitingSocket) {
+        waitingSocket.join(roomCode);
+        waitingSocket.emit('randomMatchFound', { roomCode });
+      }
+      
+      // Emit player status to both
+      io.to(roomCode).emit('playerStatus', {
+        player1: rooms[roomCode].player1,
+        player2: rooms[roomCode].player2
+      });
+      
+      console.log(`Matched ${waitingPlayer.playerName} with ${playerName} in room ${roomCode}`);
+    } else {
+      // No one waiting, add this player to the waiting list
+      waitingPlayers.push({ socketId: socket.id, playerName });
+      socket.emit('waitingForMatch');
+      console.log(`${playerName} added to waiting list`);
+    }
+  });
+  socket.on('cancelRandomMatch', (playerName) => {
+    // Remove player from waiting list
+    waitingPlayers = waitingPlayers.filter(
+      player => player.socketId !== socket.id && player.playerName !== playerName
+    );
+    console.log(`${playerName} canceled matchmaking`);
+    socket.emit('matchmakingCanceled');
+  });
   socket.on('createPublicRoom', (roomName, gameType = 'tictactoe') => {
     const roomId = Math.random().toString(36).substr(2, 5);
     rooms[roomId] = initializeGameState(gameType);
@@ -382,7 +438,7 @@ io.on('connection', (socket) => {
   // Handle disconnections
   socket.on('disconnect', () => {
     console.log(`Client disconnected: ${socket.id}`);
-    
+    waitingPlayers = waitingPlayers.filter(player => player.socketId !== socket.id);
     // Check if this socket was a room creator and handle accordingly
     for (const roomId in roomCreators) {
       if (roomCreators[roomId] === socket.id) {

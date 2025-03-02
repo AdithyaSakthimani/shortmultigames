@@ -53,6 +53,9 @@
     cursor: pointer;
     color: white;
   }
+  .rooms-button:hover{
+    background-color: #3a80d2;
+  }
   .create-public-room{
     display: flex;
     width: 100%;
@@ -102,7 +105,9 @@
     background-color: #8b0a1a;
   }
   .rooms-join-button {
-    background-color: #28a745;
+    background-color: #007bff;
+    font-size: 16px;
+    color: white;
     width: 60%;
     max-width: 300px;
     border: none;
@@ -114,7 +119,7 @@
     margin-bottom: 10px;
   }
   .rooms-join-button:hover {
-    background-color: #218838;
+    background-color: #3a80d2;
   }
   .room-search-input{
     width: 70%;
@@ -324,4 +329,82 @@
 .join-room-button, 
 .join-room-buttonclose {
   padding: 5px 10px;
+}
+
+
+.random-match-form {
+  display: flex;
+  flex-direction: column;
+}
+
+
+
+.random-match-button {
+  background-color:#007bff;
+  color: white;
+  font-size: 16px;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin-top: 8px;
+  max-width: 300px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.random-match-button:hover:not(:disabled) {
+  background-color: #3a80d2;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+}
+
+.random-match-button:disabled {
+  background-color: #6da8e6;
+  cursor: not-allowed;
+}
+
+.searching-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 24px;
+}
+
+.searching-text {
+  font-size: 18px;
+  color: #333;
+  margin-bottom: 8px;
+  animation: pulse 1.5s infinite;
+  font-weight: 600;
+}
+
+.searching-name {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 16px;
+}
+
+.cancel-search-button {
+  background-color: #e74c3c;
+  color: white;
+  font-size: 14px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.cancel-search-button:hover {
+  background-color: #c0392b;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.7; }
+  50% { opacity: 1; }
+  100% { opacity: 0.7; }
 }

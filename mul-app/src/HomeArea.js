@@ -74,21 +74,25 @@ const HomeArea = () => {
   const steps = [
     {
       icon: <Users className="step-icon" />,
-      title: "Create a Room",
-      description: "Start your own game room and invite friends to join with a unique room code. Choose between public or private room options."
+      title: "Create or Join a Room",
+      description: "Start your own room with custom settings or jump into an existing one with a simple click. No complicated setup required."
     },
     {
-      icon: <Play className="step-icon" />,
-      title: "Join a Room",
-      description: "Enter a room code to join your friends' game session or browse available public rooms to find new opponents."
+      icon: <Globe className="step-icon" />,
+      title: "Connect Worldwide",
+      description: "Get matched instantly with players from around the world or invite friends with a room code. Experience diverse strategies from global opponents."
     },
     {
       icon: <Sword className="step-icon" />,
-      title: "Choose Your Game",
-      description: "Select from multiple classic two-player games including Othello, Connect 4, Tic-Tac-Toe, Rock Paper Scissors, and Battleship."
+      title: "Select Your Challenge",
+      description: "Choose from our collection of classic games, each designed for thrilling head-to-head competition that tests your strategic thinking."
+    },
+    {
+      icon: <Zap className="step-icon" />,
+      title: "Battle in Real-Time",
+      description: "Engage in seamless, lag-free gameplay with instant move synchronization. Every match sharpens your skills against real opponents worldwide."
     }
   ];
-
   const features = [
     {
       icon: <Zap className="feature-icon" />,
@@ -157,9 +161,13 @@ const HomeArea = () => {
       icon: <Ship className="game-type-icon" />,
       name: "Battleship",
       description: "Naval strategy game to sink your opponent's fleet"
+    },
+    {
+      icon: <Layers className="game-type-icon" />,
+      name: "Coming Soon",
+      description: "More exciting multiplayer games being developed and added regularly to our collection"
     }
   ];
-
   return (
     <main className="homepage">
       <section className="hero">
@@ -170,8 +178,8 @@ const HomeArea = () => {
           </div>
           <h1 className="title">Multiplayer Battle Arena</h1>
           <p className="subtitle">
-          Play classic strategy games with friends or rivals in real-time. No sign-ups, no downloads—just pure competitive fun!
-          </p>
+  Play classic strategy games with friends or rivals in real-time for free. Connect with random players worldwide or invite friends—no sign-ups, no downloads—just pure competitive fun!
+</p>
           <button
             onClick={() => navigate('/rooms')}
             className="cta-button"

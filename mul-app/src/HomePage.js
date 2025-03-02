@@ -16,7 +16,44 @@ function HomePage() {
   const [publicPlayerName, setPublicPlayerName] = useState({}); // Changed to an object to store names by roomId
   const [selectedRoomId, setSelectedRoomId] = useState(null); // Track which room is selected
   const [createdRooms, setCreatedRooms] = useState([]); // Track rooms created by this user
-
+  const [isSearching, setIsSearching] = useState(false);
+    const handleRandomMatch = () => {
+      if (!playerName || playerName.trim() === '') {
+        alert('Please enter your name first');
+        return;
+      }
+      
+      setIsSearching(true);
+      socket.emit('findRandomMatch', playerName);
+      
+      socket.on('waitingForMatch', () => {
+        console.log('Waiting for a match...');
+        // You can add a loading spinner or message here
+      });
+      
+      socket.on('randomMatchFound', ({ roomCode }) => {
+        setCode(roomCode);
+        
+        // Save session info to localStorage
+        localStorage.setItem('gameSession', JSON.stringify({
+          savedCode: roomCode,
+          savedName: playerName
+        }));
+        
+        setIsSearching(false);
+        navigate('/gameroom');
+      });
+    };
+    
+    const cancelSearch = () => {
+      socket.emit('cancelRandomMatch', playerName);
+      socket.off('waitingForMatch');
+      socket.off('randomMatchFound');
+      setIsSearching(false);
+    };
+    socket.on('matchmakingCanceled', () => {
+      setIsSearching(false);
+    });
   useEffect(() => {
     if (!socket) return;
 
@@ -213,6 +250,41 @@ function HomePage() {
 
   return (
     <div className="hompage-container">
+      <div className="box">
+  {!isSearching ? (
+    <div className="random-match-form">
+      <h2 className="rooms-title">Quick Play</h2>
+      <h3 className="sub-title">Quickly find a opponent to play with online</h3>
+      <div className="input-group">
+        <label>Your Name</label>
+        <input
+          className="input-field"
+          value={playerName}
+          onChange={(e) => setPlayerName(e.target.value)}
+          placeholder="Enter your name"
+        />
+      </div>
+      <button 
+        className="random-match-button"
+        onClick={handleRandomMatch}
+        disabled={!playerName || playerName.trim() === ''}
+      >
+        Connect with Random Player
+      </button>
+    </div>
+  ) : (
+    <div className="searching-container">
+      <div className="searching-text">Searching for opponent...</div>
+      <div className="searching-name">Playing as: <strong>{playerName}</strong></div>
+      <button 
+        className="cancel-search-button"
+        onClick={cancelSearch}
+      >
+        Cancel
+      </button>
+    </div>
+  )}
+</div>
       <div className="box">
         {publicRooms.length > 0 ? renderPublicRooms() : ''}
         <h2 className="rooms-title">Create Room</h2>

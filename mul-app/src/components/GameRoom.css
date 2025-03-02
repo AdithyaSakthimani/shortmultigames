@@ -185,30 +185,3 @@
   border-radius: 10px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .gameroom-container {
-    padding: 1rem;
-  }
-  
-  .header {
-    flex-direction: column;
-    gap: 1rem;
-    text-align: center;
-    padding: 1rem;
-  }
-  
-  .leave-button {
-    width: 100%;
-    margin-top: 0.5rem;
-  }
-  
-  .game-selection {
-    grid-template-columns: 1fr;
-  }
-  
-  .game-image-container {
-    height: 150px;
-  }
-}

@@ -5,7 +5,7 @@
   padding: 20px 24px;
   position: sticky;
   top: 0;
-  z-index: 50;
+  z-index: 900;
   transition: all 0.3s ease;
   border-bottom: 1px solid rgba(99, 102, 241, 0.3);
   animation: glow 3s infinite alternate;
