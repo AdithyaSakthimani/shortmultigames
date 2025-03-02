@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Users,
@@ -30,6 +30,46 @@ import './HomeArea.css';
 
 const HomeArea = () => {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Create a new IntersectionObserver for content section animations
+    const contentObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("active");
+          }
+        });
+      },
+      { threshold: 0.25, rootMargin: "0px 0px -100px 0px" }
+    );
+
+    // Separate observer for title animations to ensure they don't affect positioning
+    const titleObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("active");
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
+
+    // Get all sections and titles that need animation
+    const sections = document.querySelectorAll('.section-animated');
+    const titles = document.querySelectorAll('.title-animated');
+
+    // Observe all elements with the appropriate observer
+    sections.forEach(section => contentObserver.observe(section));
+    titles.forEach(title => titleObserver.observe(title));
+
+    // Cleanup function
+    return () => {
+      contentObserver.disconnect();
+      titleObserver.disconnect();
+    };
+  }, []);
 
   const steps = [
     {
@@ -121,9 +161,8 @@ const HomeArea = () => {
   ];
 
   return (
-    <div className="homepage">
-      {/* Hero Section - Kept unchanged as requested */}
-      <div className="hero">
+    <main className="homepage">
+      <section className="hero">
         <div className="hero-content">
           <div className="crossed-swords">
             <Sword className="sword sword-left" />
@@ -143,14 +182,16 @@ const HomeArea = () => {
         <div className="scroll-down">
           <span>↓</span>
         </div>
-      </div>
+      </section>
 
       {/* How It Works Section */}
-      <div className="how-it-works-section">
+      <section className="how-it-works-section">
+      <div className="title-animated">
         <h2 className="section-title">How It Works</h2>
-        <div className="steps-grid">
+      </div>
+        <div className="steps-grid section-animated">
           {steps.map((step, index) => (
-            <div key={index} className="step-card">
+            <div key={index} className="step-card animate-item">
               <div className="step-number">{index + 1}</div>
               <div className="icon-container">
                 {step.icon}
@@ -160,14 +201,16 @@ const HomeArea = () => {
             </div>
           ))}
         </div>
-      </div>
+      </section>
 
       {/* Available Games Section */}
-      <div className="available-games-section">
-        <h2 className="section-title">Games You Can Play</h2>
-        <div className="games-grid">
+      <section className="available-games-section">
+        <div className="title-animated">
+          <h2 className="section-title">Games You Can Play</h2>
+        </div>
+        <div className="games-grid section-animated">
           {availableGames.map((game, index) => (
-            <div key={index} className="game-card">
+            <div key={index} className="game-card animate-item">
               <div className="game-icon-container">
                 {game.icon}
               </div>
@@ -176,14 +219,16 @@ const HomeArea = () => {
             </div>
           ))}
         </div>
-      </div>
+      </section>
 
       {/* Features Section */}
-      <div className="features">
+      <section className="features">
+      <div className="title-animated">
         <h2 className="features-title">Platform Features</h2>
-        <div className="features-grid">
+        </div>
+        <div className="features-grid section-animated">
           {features.map((feature, index) => (
-            <div key={index} className="feature">
+            <div key={index} className="feature animate-item">
               <div className="feature-icon-container">
                 {feature.icon}
               </div>
@@ -192,11 +237,11 @@ const HomeArea = () => {
             </div>
           ))}
         </div>
-      </div>
+      </section>
 
       {/* Call to Action */}
-      <div className="bottom-cta">
-        <h2>Ready to Challenge Your Friends?</h2>
+      <section className="bottom-cta">
+        <h2 className="title-animated">Ready to Challenge Your Friends?</h2>
         <p>No accounts, no downloads, just instant multiplayer fun</p>
         <button 
           onClick={() => navigate('/rooms')}
@@ -204,9 +249,9 @@ const HomeArea = () => {
         >
           Create a Room Now
         </button>
-      </div>
+      </section>
       <Analytics/>
-    </div>
+    </main>
   );
 };
 
