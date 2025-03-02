@@ -3,6 +3,24 @@ import './Connect4.css';
 import NoteContext from './NoteContext';
 
 const Connect4 = () => {
+  const [lastGameStarter, setLastGameStarter] = useState(() => {
+    const savedSession = localStorage.getItem('gameSession');
+    let savedCode = null;
+    
+    if (savedSession) {
+      const { savedCode: code } = JSON.parse(savedSession);
+      savedCode = code;
+    }
+    
+    if (savedCode) {
+      const savedStarter = JSON.parse(localStorage.getItem(`connect4_lastStarter_${savedCode}`));
+      if (savedStarter !== null) {
+        return savedStarter;
+      }
+    }
+    
+    return true; // Default Red starts first game
+  });
   const [isRedNext, setIsRedNext] = useState(()=>{const savedSession = localStorage.getItem('gameSession');
   let savedCode = null;
   
@@ -69,13 +87,19 @@ const Connect4 = () => {
         if (code) {
           localStorage.setItem(`connect4_board_${code}`, JSON.stringify(board));
           localStorage.setItem(`connect4_turn_${code}`, JSON.stringify(isRedNext));
+          localStorage.setItem(`connect4_lastStarter_${code}`, JSON.stringify(lastGameStarter));
         }
-      }, [board, isRedNext, code]);
+      }, [board, isRedNext, code,lastGameStarter]);
       useEffect(()=>{if (code) 
         {const savedTurn = JSON.parse(localStorage.getItem(`connect4_turn_${code}`));
         if (savedTurn !== null) {
           setIsRedNext(savedTurn);
-        }}
+        }
+        const savedStarter = JSON.parse(localStorage.getItem(`connect4_lastStarter_${code}`));
+        if (savedStarter !== null) {
+          setLastGameStarter(savedStarter);
+        }
+  }
       },[code]);
   useEffect(() => {
         if (!code || !playerName || !socket) {
@@ -254,6 +278,8 @@ const Connect4 = () => {
     }
     
     // Reset local state
+    const newStartingPlayer = !lastGameStarter;
+    setLastGameStarter(newStartingPlayer);
     setWinner({ mark: null, name: null });
     
     // Emit reset move
@@ -263,7 +289,7 @@ const Connect4 = () => {
         type: 'connect4',
         action: 'reset',
         board: Array(42).fill(null),
-        isRedNext: true
+        isRedNext: newStartingPlayer
       }
     });
   };

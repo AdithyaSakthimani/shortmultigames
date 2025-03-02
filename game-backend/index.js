@@ -99,8 +99,6 @@ io.on('connection', (socket) => {
   
   socket.on('joinRoom', (name, roomCode) => {
     console.log(`Attempting to join room ${roomCode} as ${name}`);
-    console.log('Current room state:', rooms[roomCode]);
-  
     if (!rooms[roomCode]) {
       console.log('Room not found');
       socket.emit("roomJoined", { success: false, error: "Room not found" });
@@ -176,6 +174,18 @@ io.on('connection', (socket) => {
     if (move.action === 'reset') {
       const gameType = move.type;
       const newState = initializeGameState(gameType);
+      
+      // Override the default isXNext value with the one provided by the client
+      if (move.type === 'tictactoe' && move.isXNext !== undefined) {
+        newState.isXNext = move.isXNext;
+      }
+      else if (move.type === 'connect4' && move.isRedNext !== undefined) {
+        newState.isRedNext = move.isRedNext;
+      }
+      else if (move.type === 'othello' && move.isBlackNext !== undefined) {
+        newState.isBlackNext = move.isBlackNext;
+      }
+      
       rooms[roomId] = {
         ...newState,
         player1: room.player1,

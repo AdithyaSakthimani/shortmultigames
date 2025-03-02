@@ -4,6 +4,26 @@ import './TicTacToe.css';
 import NoteContext from './NoteContext';
 
 const TicTacToe = () => {
+  // Track who started the last game to alternate first player
+  const [lastGameStarter, setLastGameStarter] = useState(() => {
+    const savedSession = localStorage.getItem('gameSession');
+    let savedCode = null;
+    
+    if (savedSession) {
+      const { savedCode: code } = JSON.parse(savedSession);
+      savedCode = code;
+    }
+    
+    if (savedCode) {
+      const savedStarter = JSON.parse(localStorage.getItem(`tictactoe_lastStarter_${savedCode}`));
+      if (savedStarter !== null) {
+        return savedStarter;
+      }
+    }
+    
+    return true; // Default X starts first game
+  });
+
   const [isXNext, setIsXNext] = useState(() => {
     const savedSession = localStorage.getItem('gameSession');
     let savedCode = null;
@@ -61,24 +81,38 @@ const TicTacToe = () => {
     }
     const initialBoard = Array(9).fill(null)
     return initialBoard;});
+  
+  // Save board and turn state to localStorage
   useEffect(() => {
       if (code) {
         localStorage.setItem(`tictactoe_board_${code}`, JSON.stringify(board));
         localStorage.setItem(`tictactoe_turn_${code}`, JSON.stringify(isXNext));
+        localStorage.setItem(`tictactoe_lastStarter_${code}`, JSON.stringify(lastGameStarter));
       }
-    }, [board, isXNext, code]);
-    useEffect(()=>{if (code) 
-      {const savedTurn = JSON.parse(localStorage.getItem(`tictactoe_turn_${code}`));
+    }, [board, isXNext, code, lastGameStarter]);
+  
+  // Load turn state from localStorage
+  useEffect(()=>{
+    if (code) {
+      const savedTurn = JSON.parse(localStorage.getItem(`tictactoe_turn_${code}`));
       if (savedTurn !== null) {
         setIsXNext(savedTurn);
-      }}
-    },[code]);
+      }
+
+      const savedStarter = JSON.parse(localStorage.getItem(`tictactoe_lastStarter_${code}`));
+      if (savedStarter !== null) {
+        setLastGameStarter(savedStarter);
+      }
+    }
+  },[code]);
+  
   // Save score to localStorage whenever it changes
   useEffect(() => {
     if (code && score) {
       localStorage.setItem(`tictactoe_score_${code}`, JSON.stringify(score));
     }
   }, [score, code]);
+  
   useEffect(() => {
         if (!code || !playerName || !socket) {
           return;
@@ -137,6 +171,7 @@ const TicTacToe = () => {
           socket.io.off("reconnect");
         };
       }, [code, playerName, socket,  setPlayerStatus, setCode, setPlayerName]);
+  
   useEffect(() => {
     if (!socket) return;
 
@@ -167,6 +202,7 @@ const TicTacToe = () => {
 
     return () => socket.off('gameUpdate');
   }, [socket, player1, player2]);
+  
   const getWinningCombination = (board) => {
     const winningCombinations = [
       [0, 1, 2], // Top row
@@ -190,6 +226,7 @@ const TicTacToe = () => {
   };
   
   const winningCombination = winner.mark ? getWinningCombination(board) : null;
+  
   const handleClick = (index) => {
     if (!socket || !code) {
       setError('Connection not available');
@@ -216,7 +253,37 @@ const TicTacToe = () => {
       }
     });
   };
-
+  const renderWinningLine = (winningCombination) => {
+    if (!winningCombination) return null;
+    
+    const [a, b, c] = winningCombination;
+    
+    // Horizontal rows
+    if (a % 3 === 0 && b === a + 1 && c === a + 2) {
+      const row = Math.floor(a / 3);
+      return <div className={`winning-line winning-line-horizontal row-${row}`}></div>;
+    }
+    
+    // Vertical columns
+    if (a === 0 || a === 1 || a === 2) {
+      if (b === a + 3 && c === a + 6) {
+        const col = a % 3;
+        return <div className={`winning-line winning-line-vertical col-${col}`}></div>;
+      }
+    }
+    
+    // Diagonal from top-left to bottom-right
+    if (a === 0 && b === 4 && c === 8) {
+      return <div className={`winning-line winning-line-diagonal top-left`}></div>;
+    }
+    
+    // Diagonal from top-right to bottom-left
+    if (a === 2 && b === 4 && c === 6) {
+      return <div className={`winning-line winning-line-diagonal top-right`}></div>;
+    }
+    
+    return null;
+  };
   const renderCell = (index, winningCombination) => {
     const cellValue = board[index];
     const isCurrentPlayer = (isXNext && playerName === player1) || 
@@ -243,6 +310,10 @@ const TicTacToe = () => {
       return;
     }
     
+    // Change who starts the next game
+    const newStartingPlayer = !lastGameStarter;
+    setLastGameStarter(newStartingPlayer);
+    
     setWinner({ mark: null, name: null });
     
     socket.emit('makeMove', {
@@ -251,7 +322,7 @@ const TicTacToe = () => {
         type: 'tictactoe',
         action: 'reset',
         board: Array(9).fill(null),
-        isXNext: true
+        isXNext: newStartingPlayer // Use the new starter to determine who goes first
       }
     });
   };
@@ -268,6 +339,7 @@ const TicTacToe = () => {
           </div>
         <div className="game-board-container">
         <div className="game-board">
+        {renderWinningLine(winningCombination)}
   {board.map((_, index) => renderCell(index, winningCombination))}
 </div>
         </div>
@@ -294,6 +366,7 @@ const TicTacToe = () => {
           <div className="game-status">
             <div>You are: {playerName}</div>
             <div>Current Turn: {currentPlayerName}</div>
+            <div>Next game starts with: {!lastGameStarter ? 'Player X' : 'Player O'}</div>
           </div>
           <div className="game-info-pc">
             {winner.mark 

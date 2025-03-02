@@ -3,6 +3,24 @@ import NoteContext from './NoteContext';
 import './Othello.css';
 
 const Othello = () => {
+  const [lastGameStarter, setLastGameStarter] = useState(() => {
+    const savedSession = localStorage.getItem('gameSession');
+    let savedCode = null;
+    
+    if (savedSession) {
+      const { savedCode: code } = JSON.parse(savedSession);
+      savedCode = code;
+    }
+    
+    if (savedCode) {
+      const savedStarter = JSON.parse(localStorage.getItem(`othello_lastStarter_${savedCode}`));
+      if (savedStarter !== null) {
+        return savedStarter;
+      }
+    }
+    
+    return true; // Default Black starts first game
+  });
   const [isBlackNext, setIsBlackNext] = useState(true);
   const [winner, setWinner] = useState({ player: null, name: null });
   const [error, setError] = useState(null);
@@ -54,6 +72,7 @@ const Othello = () => {
     if (code) {
       localStorage.setItem(`othello_board_${code}`, JSON.stringify(board));
       localStorage.setItem(`othello_turn_${code}`, JSON.stringify(isBlackNext));
+      localStorage.setItem(`othello_lastStarter_${code}`, JSON.stringify(lastGameStarter));
     }
   }, [board, isBlackNext, code]);
   useEffect(() => {
@@ -158,6 +177,10 @@ const Othello = () => {
     if (code) {
       const savedBoard = JSON.parse(localStorage.getItem(`othello_board_${code}`));
       const savedTurn = JSON.parse(localStorage.getItem(`othello_turn_${code}`));
+      const savedStarter = JSON.parse(localStorage.getItem(`othello_lastStarter_${code}`));
+      if (savedStarter !== null) {
+        setLastGameStarter(savedStarter);
+      }
       
       if (savedBoard) {
         setBoard(savedBoard);
@@ -377,13 +400,17 @@ const Othello = () => {
       setError('Socket connection or room code not available');
       return;
     }
-    
+    const newStartingPlayer = !lastGameStarter;
+    setLastGameStarter(newStartingPlayer);
+    setIsBlackNext(newStartingPlayer);
+    setWinner({ player: null, name: null });
     socket.emit('makeMove', {
       roomId: code,
       move: {
         type: 'othello',
-        action: 'reset',
-        score: score // Maintain current scores
+        score: score, // Maintain current scores
+        isBlackNext: newStartingPlayer,
+        action: 'reset' // Add this line to pass the new starter
       }
     });
   };
