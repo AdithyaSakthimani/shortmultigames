@@ -565,7 +565,9 @@ body {
   .title {
     font-size: 2rem;
   }
-  
+  .hero{
+    height: 90vh;
+  }
   .cta-button {
     padding: 0.8rem 1.5rem;
     font-size: 1rem;
