@@ -17,7 +17,8 @@ import {
   Clock,
   Globe,
   Sparkles,
-  CircleDollarSign
+  CircleDollarSign,
+  Info
 } from 'lucide-react';
 import { Analytics } from "@vercel/analytics/react"
 import {
@@ -176,10 +177,10 @@ const HomeArea = () => {
             <Sword className="sword sword-left" />
             <Sword className="sword sword-right" />
           </div>
-          <h1 className="title">Multiplayer Battle Arena</h1>
+          <h1 className="title">DuoNet: Multiplayer Battle Arena</h1>
           <p className="subtitle">
-  Play classic strategy games with friends or rivals in real-time for free. Connect with random players worldwide or invite friends—no sign-ups, no downloads—just pure competitive fun!
-</p>
+            Play classic strategy games with friends or rivals in real-time for free. Connect with random players worldwide or invite friends—no sign-ups, no downloads—just pure competitive fun!
+          </p>
           <button
             onClick={() => navigate('/rooms')}
             className="cta-button"
@@ -192,11 +193,34 @@ const HomeArea = () => {
         </div>
       </section>
 
+      {/* Description Section */}
+      <section className="description-section">
+        <div className="title-animated">
+          <h2 className="section-title">About DuoNet</h2>
+        </div>
+        <div className="description-content section-animated">
+          <div className="description-icon-container">
+            <Info className="description-icon" />
+          </div>
+          <div className="description-text">
+            <p>
+              <strong>DuoNet</strong> is the ultimate destination for <strong>2-player online games</strong> that blend nostalgia with modern competitive gameplay. Our platform features beloved <strong>multiplayer strategy games</strong> like <strong>Tic-Tac-Toe, Connect 4, Othello, Battleship,</strong> and <strong>Rock Paper Scissors</strong> - all reimagined for seamless online play.
+            </p>
+            <p>
+              Whether you're looking to <strong>play games online</strong> with friends or test your skills against strangers in <strong>real-time gaming</strong> matches, DuoNet offers a frictionless experience with no downloads, registrations, or fees. Our <strong>free online multiplayer games</strong> are designed for instant engagement across all devices.
+            </p>
+            <p>
+              What sets DuoNet apart is our focus on <strong>competitive gaming</strong> through a sleek, responsive interface that eliminates lag and delays. Create private rooms to <strong>play with friends</strong> or join public lobbies to challenge opponents worldwide. With DuoNet, classic board games become thrilling digital duels where strategy and quick thinking determine the victor.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* How It Works Section */}
       <section className="how-it-works-section">
-      <div className="title-animated">
-        <h2 className="section-title">How It Works</h2>
-      </div>
+        <div className="title-animated">
+          <h2 className="section-title">How It Works</h2>
+        </div>
         <div className="steps-grid section-animated">
           {steps.map((step, index) => (
             <div key={index} className="step-card animate-item">
@@ -231,8 +255,8 @@ const HomeArea = () => {
 
       {/* Features Section */}
       <section className="features">
-      <div className="title-animated">
-        <h2 className="features-title">Platform Features</h2>
+        <div className="title-animated">
+          <h2 className="features-title">Platform Features</h2>
         </div>
         <div className="features-grid section-animated">
           {features.map((feature, index) => (
